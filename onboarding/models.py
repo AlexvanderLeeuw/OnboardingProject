@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from onboarding.choice_lists import CURRENCY_CHOICES
 
 class Category(models.Model):
-    owner = models.CharField(max_length=200)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE)
     name = models.CharField(max_length=200)
 
 class Income(models.Model):
