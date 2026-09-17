@@ -8,25 +8,27 @@ class CategorySerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "owner"]
 
 class IncomeSerializer(serializers.ModelSerializer):
+    category = serializers.SlugRelatedField(read_only=False, slug_field="name", queryset=Category.objects.all())
+    owner = serializers.SlugRelatedField(read_only=True, slug_field="username")
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        user = self.context["request"].user
+        self.fields["category"].queryset = Category.objects.filter(owner=user)
+        
     class Meta:
         model = Income
         fields = ["id", "source", "category", "currency", "amount", "date", "owner"]
         read_only_fields = ["id", "owner"]
-    def validate_category(self, category):
-        if category.owner != self.context["request"].user:
-            raise serializers.ValidationError(
-                "Category belongs to other user."
-            )
-        return category
 
 class ExpenseSerializer(serializers.ModelSerializer):
+    category = serializers.SlugRelatedField(read_only=False, slug_field="name", queryset=Category.objects.all())
+    owner = serializers.SlugRelatedField(read_only=True, slug_field="username")
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        user = self.context["request"].user
+        self.fields["category"].queryset = Category.objects.filter(owner=user)
+
     class Meta:
         model = Expense
         fields = ["id", "source", "category", "currency", "amount", "date", "owner"]
         read_only_fields = ["id", "owner"]
-    def validate_category(self, category):
-            if category.owner != self.context["request"].user:
-                raise serializers.ValidationError(
-                    "Category belongs to other user."
-                )
-            return category
