@@ -12,9 +12,21 @@ class IncomeSerializer(serializers.ModelSerializer):
         model = Income
         fields = ["id", "source", "category", "currency", "amount", "date", "owner"]
         read_only_fields = ["id", "owner"]
+    def validate_category(self, category):
+        if category.owner != self.context["request"].user:
+            raise serializers.ValidationError(
+                "Category belongs to other user."
+            )
+        return category
 
 class ExpenseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Expense
         fields = ["id", "source", "category", "currency", "amount", "date", "owner"]
         read_only_fields = ["id", "owner"]
+    def validate_category(self, category):
+            if category.owner != self.context["request"].user:
+                raise serializers.ValidationError(
+                    "Category belongs to other user."
+                )
+            return category
