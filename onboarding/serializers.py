@@ -15,7 +15,7 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = ["id", "owner", "name"]
         read_only_fields = ["id", "owner"]
 
-class IncomeSerializer(serializers.ModelSerializer):
+class IncomeSerializer(serializers.HyperlinkedModelSerializer):
     #Make sure that the category and owner fields show up as names, not IDs
     category = serializers.SlugRelatedField(read_only=False, slug_field="name", queryset=Category.objects.all())
     owner = serializers.SlugRelatedField(read_only=True, slug_field="username")
@@ -47,10 +47,10 @@ class IncomeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Income
-        fields = ["id", "source", "category", "currency", "amount", "date", "owner"]
+        fields = ["id", "url", "source", "category", "currency", "amount", "date", "owner"]
         read_only_fields = ["id", "owner"]
 
-class ExpenseSerializer(serializers.ModelSerializer):
+class ExpenseSerializer(serializers.HyperlinkedModelSerializer):
     #Make sure that the category and owner fields show up as names, not IDs
     category = serializers.SlugRelatedField(read_only=False, slug_field="name", queryset=Category.objects.all())
     owner = serializers.SlugRelatedField(read_only=True, slug_field="username")
@@ -82,5 +82,5 @@ class ExpenseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Expense
-        fields = ["id", "source", "category", "currency", "amount", "date", "owner"]
+        fields = ["id", "url", "source", "category", "currency", "amount", "date", "owner"]
         read_only_fields = ["id", "owner"]
