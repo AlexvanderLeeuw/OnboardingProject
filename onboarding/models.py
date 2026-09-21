@@ -15,6 +15,7 @@ class Income(models.Model):
     amount = models.DecimalField(max_digits=15, decimal_places=2)
     date = models.DateField(auto_now=False)
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
+    repeats = models.BooleanField(default=False)
 
 class Expense(models.Model):
     source = models.CharField(max_length=100)
