@@ -113,7 +113,7 @@
 {% endblock %}
 {% block content %}
 <div class="income-details-container">
-    <a href="{% url 'incomes-page' %}" class="back-link">← Back to Incomes</a>
+    <a id="back-link" href="{% url 'incomes-page' %}" class="back-link">← Back</a>
     <h1>Income Details</h1>
 
     <div class="income-details-form">
@@ -175,8 +175,25 @@
     const errorMessage = document.getElementById("error-message");
     const successMessage = document.getElementById("success-message");
     const deleteButton = document.getElementById("delete-button");
+    const backLink = document.getElementById("back-link");
     const incomeId = "{{ income_id }}";
     let allCategories = [];
+
+    function getReturnUrl() {
+        const params = new URLSearchParams(window.location.search);
+        const returnTo = params.get("return_to");
+
+        const urlMap = {
+            "monthly-incomes": "{% url 'monthly-incomes-page' %}",
+            "incomes": "{% url 'incomes-page' %}"
+        };
+
+        return urlMap[returnTo] || "{% url 'incomes-page' %}";
+    }
+
+    function updateBackLink() {
+        backLink.href = getReturnUrl();
+    }
 
     function getCookie(name) {
         let cookieValue = null;
@@ -297,7 +314,7 @@
 
             showSuccess("Income saved successfully! Redirecting...");
             setTimeout(() => {
-                window.location.href = "{% url 'incomes-page' %}";
+                window.location.href = getReturnUrl();
             }, 1500);
         } catch (error) {
             console.error(error);
@@ -322,7 +339,7 @@
 
                 showSuccess("Income deleted successfully! Redirecting...");
                 setTimeout(() => {
-                    window.location.href = "{% url 'incomes-page' %}";
+                    window.location.href = getReturnUrl();
                 }, 1500);
             } catch (error) {
                 console.error(error);
@@ -331,6 +348,7 @@
         }
     });
 
+    updateBackLink();
     loadCategories();
     loadIncomeDetails();
 </script>
