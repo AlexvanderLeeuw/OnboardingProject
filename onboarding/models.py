@@ -16,6 +16,7 @@ class Income(models.Model):
     date = models.DateField(auto_now=False)
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
     repeats = models.BooleanField(default=False)
+    expiration_date = models.DateField(auto_now=False, null=True)
 
 class Expense(models.Model):
     source = models.CharField(max_length=100)
@@ -25,3 +26,4 @@ class Expense(models.Model):
     date = models.DateField(auto_now=False)
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
     repeats = models.BooleanField(default=False)
+    expiration_date = models.DateField(auto_now=False, null=True)

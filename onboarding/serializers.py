@@ -47,7 +47,7 @@ class IncomeSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Income
-        fields = ["id", "url", "source", "category", "currency", "amount", "date", "owner", "repeats"]
+        fields = ["id", "url", "source", "category", "currency", "amount", "date", "owner", "repeats", "expiration_date"]
         read_only_fields = ["id", "owner"]
 
 class ExpenseSerializer(serializers.HyperlinkedModelSerializer):
@@ -82,5 +82,5 @@ class ExpenseSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Expense
-        fields = ["id", "url", "source", "category", "currency", "amount", "date", "repeats", "owner"]
+        fields = ["id", "url", "source", "category", "currency", "amount", "date", "repeats", "owner", "expiration_date"]
         read_only_fields = ["id", "owner"]
