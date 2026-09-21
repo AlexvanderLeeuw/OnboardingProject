@@ -1,0 +1,84 @@
+{% extends "onboarding/auth_base.html" %}
+{% block title %}Login - Finance Manager{% endblock %}
+{% block extra_css %}
+<style>
+    .auth-container {
+        max-width: 400px;
+        margin: 0 auto;
+    }
+    .auth-container h1 {
+        text-align: center;
+        margin-bottom: 32px;
+        margin-top: 0;
+    }
+    .auth-form {
+        background-color: white;
+        padding: 32px;
+        border-radius: 6px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    }
+    .auth-form label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: bold;
+    }
+    .auth-form input {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 15px;
+        margin-bottom: 16px;
+    }
+    .auth-form button {
+        width: 100%;
+        padding: 10px 18px;
+        background-color: #9b46e5;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-size: 15px;
+        cursor: pointer;
+    }
+    .error-message {
+        color: #dc2626;
+        margin-bottom: 16px;
+        text-align: center;
+    }
+    .register-link {
+        text-align: center;
+        margin-top: 16px;
+    }
+    .register-link a {
+        color: #9b46e5;
+        text-decoration: none;
+    }
+    .register-link a:hover {
+        text-decoration: underline;
+    }
+</style>
+{% endblock %}
+{% block content %}
+<div class="auth-container">
+    <h1>Login</h1>
+    <div class="auth-form">
+        {% if error %}
+        <div class="error-message">{{ error }}</div>
+        {% endif %}
+        <form method="POST">
+            {% csrf_token %}
+            <label for="username">Username</label>
+            <input type="text" id="username" name="username" required>
+
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" required>
+
+            <button type="submit">Login</button>
+
+            <div class="register-link">
+                <a href="{% url 'register-page' %}">Don't have an account, register now</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
