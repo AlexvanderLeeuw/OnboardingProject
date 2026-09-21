@@ -1,6 +1,7 @@
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from onboarding.models import Category, Expense, Income
 from onboarding.serializers import CategorySerializer, ExpenseSerializer, IncomeSerializer
+from onboarding.choice_lists import CURRENCY_CHOICES
 from django.shortcuts import render
 
 class CategoryList(ListCreateAPIView):
@@ -42,3 +43,9 @@ class IncomeDetails(RetrieveUpdateDestroyAPIView):
 #Template views start here
 def categories_page(request):
     return render(request, "onboarding/categories.html")
+
+def expenses_page(request):
+    return render(request, "onboarding/expenses.html", {"currency_choices": CURRENCY_CHOICES})
+
+def expense_details_page(request, pk):
+    return render(request, "onboarding/expensedetails.html", {"currency_choices": CURRENCY_CHOICES, "expense_id": pk})

@@ -82,5 +82,5 @@ class ExpenseSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Expense
-        fields = ["id", "url", "source", "category", "currency", "amount", "date", "owner"]
+        fields = ["id", "url", "source", "category", "currency", "amount", "date", "repeats", "owner"]
         read_only_fields = ["id", "owner"]

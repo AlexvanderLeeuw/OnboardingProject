@@ -1,0 +1,610 @@
+{% extends "onboarding/base.html" %}
+{% block title %}Expenses - Finance Manager{% endblock %}
+{% block extra_css %}
+<style>
+    .expenses-container {
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+    .expenses-container h1 {
+        margin-bottom: 24px;
+    }
+    .filters-section {
+        background-color: white;
+        padding: 20px;
+        border-radius: 6px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        margin-bottom: 24px;
+    }
+    .filter-row {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        align-items: flex-end;
+    }
+    .filter-group {
+        flex: 1;
+        min-width: 200px;
+    }
+    .filter-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: bold;
+        font-size: 14px;
+    }
+    .filter-group select,
+    .filter-group input {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 15px;
+    }
+    .sort-control {
+        display: flex;
+        gap: 8px;
+        margin-left: auto;
+    }
+    .sort-control select {
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 15px;
+        background-color: white;
+    }
+    .overview-section {
+        background-color: white;
+        border-radius: 6px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        margin-bottom: 40px;
+        overflow-x: auto;
+    }
+    .expenses-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .expenses-table th {
+        background-color: #f9f9f9;
+        padding: 12px 16px;
+        text-align: left;
+        font-weight: bold;
+        border-bottom: 2px solid #eee;
+        font-size: 14px;
+    }
+    .expenses-table td {
+        padding: 12px 16px;
+        border-bottom: 1px solid #eee;
+    }
+    .expense-row {
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+    .expense-row:hover {
+        background-color: #f9f9f9;
+    }
+    .repeating-badge {
+        display: inline-block;
+        background-color: #e5e7eb;
+        color: #374151;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 13px;
+        font-weight: 500;
+    }
+    .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 20px;
+        padding: 16px;
+    }
+    .pagination a,
+    .pagination span {
+        padding: 8px 12px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        text-decoration: none;
+        color: #333;
+        font-size: 14px;
+    }
+    .pagination a:hover {
+        background-color: #f0f0f0;
+    }
+    .pagination .active {
+        background-color: #9b46e5;
+        color: white;
+        border-color: #9b46e5;
+    }
+    .add-expense-section {
+        background-color: white;
+        padding: 24px;
+        border-radius: 6px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        max-width: 600px;
+    }
+    .add-expense-section h2 {
+        margin-top: 0;
+        margin-bottom: 20px;
+        font-size: 18px;
+    }
+    .form-group {
+        margin-bottom: 16px;
+    }
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: bold;
+        font-size: 14px;
+    }
+    .form-group input,
+    .form-group select {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 15px;
+    }
+    .form-group input[type="checkbox"] {
+        width: auto;
+        margin-right: 8px;
+    }
+    .checkbox-label {
+        display: flex;
+        align-items: center;
+        font-weight: normal;
+    }
+    .add-expense-section button {
+        padding: 10px 18px;
+        background-color: #9b46e5;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-size: 15px;
+        cursor: pointer;
+        margin-top: 8px;
+    }
+    .add-expense-section button:hover {
+        background-color: #8a3dd4;
+    }
+    .error-message {
+        color: #dc2626;
+        margin-bottom: 12px;
+        padding: 12px;
+        background-color: #fee2e2;
+        border-radius: 4px;
+    }
+    .success-message {
+        color: #059669;
+        margin-bottom: 12px;
+        padding: 12px;
+        background-color: #d1fae5;
+        border-radius: 4px;
+    }
+    .loading-message {
+        color: #678;
+        text-align: center;
+        padding: 40px 16px;
+    }
+    .empty-message {
+        color: #678;
+        text-align: center;
+        padding: 40px 16px;
+    }
+    @media (max-width: 768px) {
+        .filter-row {
+            flex-direction: column;
+        }
+        .filter-group {
+            min-width: 100%;
+        }
+        .sort-control {
+            margin-left: 0;
+        }
+        .expenses-table {
+            font-size: 14px;
+        }
+        .expenses-table th,
+        .expenses-table td {
+            padding: 8px;
+        }
+    }
+</style>
+{% endblock %}
+{% block content %}
+<div class="expenses-container">
+    <h1>Expenses</h1>
+    <div class="filters-section">
+        <div id="error-message" class="error-message" style="display: none;"></div>
+        <div class="filter-row">
+            <div class="filter-group">
+                <label for="category-filter">Filter by category</label>
+                <select id="category-filter">
+                    <option value="">All categories</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="repeating-filter">Filter by type</label>
+                <select id="repeating-filter">
+                    <option value="">All expenses</option>
+                    <option value="monthly">Repeats monthly</option>
+                    <option value="non-monthly">One-time</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="search-bar">Search by source</label>
+                <input type="text" id="search-bar" placeholder="Enter source name">
+            </div>
+            <div class="sort-control">
+                <select id="sort-by">
+                    <option value="date-desc">Date (newest first)</option>
+                    <option value="date-asc">Date (oldest first)</option>
+                    <option value="recent-desc">Recent (newest to oldest)</option>
+                    <option value="recent-asc">Recent (oldest to newest)</option>
+                    <option value="amount-desc">Amount (most to least expensive)</option>
+                    <option value="amount-asc">Amount (least to most expensive  )</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="overview-section">
+        <div id="expenses-list">
+            <p class="loading-message">Loading expenses...</p>
+        </div>
+    </div>
+
+    <div class="add-expense-section">
+        <h2>Add New Expense</h2>
+        <div id="form-error" class="error-message" style="display: none;"></div>
+        <form id="add-expense-form">
+            <div class="form-group">
+                <label for="expense-source">Source</label>
+                <input type="text" id="expense-source" name="source" placeholder="What was the expense's source?    " required>
+            </div>
+            <div class="form-group">
+                <label for="expense-category">Category</label>
+                <select id="expense-category" name="category" required>
+                    <option value="">Select a category</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="expense-amount">Amount</label>
+                <input type="number" id="expense-amount" name="amount" placeholder="0.00" step="0.01" min="0" required>
+            </div>
+            <div class="form-group">
+                <label for="expense-currency">Currency</label>
+                <select id="expense-currency" name="currency" required>
+                    <option value="">Select currency</option>
+                    {% for code, label in currency_choices %}
+                    <option value="{{ code }}">{{ code }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="expense-date">Date</label>
+                <input type="date" id="expense-date" name="date" required>
+            </div>
+            <div class="form-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="expense-repeats" name="repeats">
+                    Monthly repeating expense
+                </label>
+            </div>
+            <button type="submit">Add Expense</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    const expensesList = document.getElementById("expenses-list");
+    const errorMessage = document.getElementById("error-message");
+    const formError = document.getElementById("form-error");
+    const addExpenseForm = document.getElementById("add-expense-form");
+    const categoryFilter = document.getElementById("category-filter");
+    const repeatingFilter = document.getElementById("repeating-filter");
+    const searchBar = document.getElementById("search-bar");
+    const sortBy = document.getElementById("sort-by");
+    let currentPage = 1;
+    let allExpenses = [];
+    let allCategories = [];
+    const itemsPerPage = 5;
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== "") {
+            const cookies = document.cookie.split(";");
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + "=")) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    async function loadCategories() {
+        try {
+            const response = await fetch("{% url 'category-list' %}");
+            if (!response.ok) {
+                throw new Error("Unable to load categories.");
+            }
+            const data = await response.json();
+            allCategories = data.results;
+
+            populateCategoryFilter();
+            populateCategoryDropdown();
+        } catch (error) {
+            console.error(error);
+            showError("Unable to load categories.");
+        }
+    }
+
+    function populateCategoryFilter() {
+        allCategories.forEach(category => {
+            const option = document.createElement("option");
+            option.value = category.name;
+            option.textContent = category.name;
+            categoryFilter.appendChild(option);
+        });
+    }
+
+    function populateCategoryDropdown() {
+        const expenseCategorySelect = document.getElementById("expense-category");
+        allCategories.forEach(category => {
+            const option = document.createElement("option");
+            option.value = category.name;
+            option.textContent = category.name;
+            expenseCategorySelect.appendChild(option);
+        });
+    }
+
+    async function loadExpenses() {
+        try {
+            allExpenses = [];
+            let url = "{% url 'expense-list' %}";
+            let hasMore = true;
+
+            while (hasMore) {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error("Unable to load expenses.");
+                }
+                const data = await response.json();
+                allExpenses = allExpenses.concat(data.results);
+
+                if (data.next) {
+                    url = data.next;
+                } else {
+                    hasMore = false;
+                }
+            }
+
+            currentPage = 1;
+            filterAndDisplayExpenses();
+        } catch (error) {
+            console.error(error);
+            expensesList.innerHTML = '<p class="error-message">Unable to load expenses.</p>';
+        }
+    }
+
+    function filterAndDisplayExpenses() {
+        currentPage = 1;
+        let filteredExpenses = [...allExpenses];
+
+        const selectedCategory = categoryFilter.value;
+        if (selectedCategory) {
+            filteredExpenses = filteredExpenses.filter(exp => exp.category === selectedCategory);
+        }
+
+        const repeatingFilterValue = repeatingFilter.value;
+        if (repeatingFilterValue === "monthly") {
+            filteredExpenses = filteredExpenses.filter(exp => exp.repeats);
+        } else if (repeatingFilterValue === "non-monthly") {
+            filteredExpenses = filteredExpenses.filter(exp => !exp.repeats);
+        }
+
+        const searchValue = searchBar.value.toLowerCase();
+        if (searchValue) {
+            filteredExpenses = filteredExpenses.filter(exp => exp.source.toLowerCase().includes(searchValue));
+        }
+
+        const sortValue = sortBy.value;
+        switch(sortValue) {
+            case "date-asc":
+                filteredExpenses.sort((a, b) => new Date(a.date) - new Date(b.date));
+                break;
+            case "date-desc":
+                filteredExpenses.sort((a, b) => new Date(b.date) - new Date(a.date));
+                break;
+            case "recent-asc":
+                filteredExpenses.sort((a, b) => a.id - b.id);
+                break;
+            case "recent-desc":
+                filteredExpenses.sort((a, b) => b.id - a.id);
+                break;
+            case "amount-asc":
+                filteredExpenses.sort((a, b) => parseFloat(a.amount) - parseFloat(b.amount));
+                break;
+            case "amount-desc":
+                filteredExpenses.sort((a, b) => parseFloat(b.amount) - parseFloat(a.amount));
+                break;
+        }
+
+        displayExpenses(filteredExpenses);
+    }
+
+    function displayExpenses(expenses) {
+        expensesList.innerHTML = "";
+
+        if (expenses.length === 0) {
+            expensesList.innerHTML = "<p class='empty-message'>No expenses found.</p>";
+            return;
+        }
+
+        const table = document.createElement("table");
+        table.className = "expenses-table";
+
+        const headerRow = document.createElement("thead");
+        const headerContent = document.createElement("tr");
+        headerContent.innerHTML = `
+            <th>Source</th>
+            <th>Category</th>
+            <th>Amount</th>
+            <th>Currency</th>
+            <th>Date</th>
+        `;
+        headerRow.appendChild(headerContent);
+        table.appendChild(headerRow);
+
+        const totalPages = Math.ceil(expenses.length / itemsPerPage);
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        const paginatedExpenses = expenses.slice(startIndex, endIndex);
+
+        const tbody = document.createElement("tbody");
+        paginatedExpenses.forEach(expense => {
+            const row = document.createElement("tr");
+            row.className = "expense-row";
+            row.style.cursor = "pointer";
+
+            const dateDisplay = expense.repeats ? "Repeats monthly" : new Date(expense.date).toLocaleDateString();
+
+            row.innerHTML = `
+                <td>${expense.source}</td>
+                <td>${expense.category}</td>
+                <td>${parseFloat(expense.amount).toFixed(2)}</td>
+                <td>${expense.currency}</td>
+                <td>${dateDisplay}</td>
+            `;
+
+            row.onclick = () => {
+                window.location.href = `/expense/${expense.id}/`;
+            };
+
+            tbody.appendChild(row);
+        });
+        table.appendChild(tbody);
+
+        expensesList.appendChild(table);
+
+        if (totalPages > 1) {
+            const paginationDiv = document.createElement("div");
+            paginationDiv.className = "pagination";
+
+            if (currentPage > 1) {
+                const prevLink = document.createElement("a");
+                prevLink.href = "#";
+                prevLink.textContent = "← Previous";
+                prevLink.onclick = (e) => {
+                    e.preventDefault();
+                    currentPage--;
+                    displayExpenses(expenses);
+                };
+                paginationDiv.appendChild(prevLink);
+            }
+
+            for (let i = 1; i <= totalPages; i++) {
+                const pageLink = document.createElement("a");
+                pageLink.href = "#";
+                pageLink.textContent = i;
+                if (i === currentPage) {
+                    pageLink.className = "active";
+                    pageLink.onclick = (e) => e.preventDefault();
+                } else {
+                    pageLink.onclick = (e) => {
+                        e.preventDefault();
+                        currentPage = i;
+                        displayExpenses(expenses);
+                    };
+                }
+                paginationDiv.appendChild(pageLink);
+            }
+
+            if (currentPage < totalPages) {
+                const nextLink = document.createElement("a");
+                nextLink.href = "#";
+                nextLink.textContent = "Next →";
+                nextLink.onclick = (e) => {
+                    e.preventDefault();
+                    currentPage++;
+                    displayExpenses(expenses);
+                };
+                paginationDiv.appendChild(nextLink);
+            }
+
+            expensesList.appendChild(paginationDiv);
+        }
+    }
+
+    function showError(message) {
+        errorMessage.textContent = message;
+        errorMessage.style.display = "block";
+    }
+
+    function hideError() {
+        errorMessage.style.display = "none";
+    }
+
+    function showFormError(message) {
+        formError.textContent = message;
+        formError.style.display = "block";
+    }
+
+    function hideFormError() {
+        formError.style.display = "none";
+    }
+
+    categoryFilter.addEventListener("change", filterAndDisplayExpenses);
+    repeatingFilter.addEventListener("change", filterAndDisplayExpenses);
+    searchBar.addEventListener("input", filterAndDisplayExpenses);
+    sortBy.addEventListener("change", filterAndDisplayExpenses);
+
+    addExpenseForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        hideFormError();
+
+        const source = document.getElementById("expense-source").value;
+        const category = document.getElementById("expense-category").value;
+        const amount = document.getElementById("expense-amount").value;
+        const currency = document.getElementById("expense-currency").value;
+        const date = document.getElementById("expense-date").value;
+        const repeats = document.getElementById("expense-repeats").checked;
+
+        try {
+            const response = await fetch("{% url 'expense-list' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCookie("csrftoken"),
+                },
+                body: JSON.stringify({
+                    source,
+                    category,
+                    amount,
+                    currency,
+                    date,
+                    repeats,
+                }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                const errors = Object.values(errorData).flat();
+                showFormError(errors.join(" "));
+                return;
+            }
+
+            addExpenseForm.reset();
+            window.location.reload();
+        } catch (error) {
+            console.error(error);
+            showFormError("Failed to add expense. Please try again.");
+        }
+    });
+
+    loadCategories();
+    loadExpenses();
+</script>
+{% endblock %}

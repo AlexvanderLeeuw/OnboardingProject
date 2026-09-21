@@ -131,6 +131,39 @@
             }
             return cookieValue;
         }
+        categoryForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const name = categoryName.value.trim();
+
+            if (!name) {
+                errorMessage.textContent = "Category name cannot be empty.";
+                return;
+            }
+
+            try {
+                const response = await fetch("{% url 'category-list' %}", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": getCookie("csrftoken")
+                    },
+                    body: JSON.stringify({ name })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.name ? error.name[0] : "Unable to create category.");
+                }
+
+                categoryName.value = "";
+                errorMessage.textContent = "";
+                loadCategories();
+            } catch (error) {
+                console.error(error);
+                errorMessage.textContent = error.message || "Unable to create category.";
+            }
+        });
+
         loadCategories();
 </script>
 {% endblock %}

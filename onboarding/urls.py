@@ -12,4 +12,6 @@ urlpatterns = [
 
     #Templates
     path('categories/', views.categories_page, name='categories-page'),
+    path('expenses/', views.expenses_page, name='expenses-page'),
+    path('expense/<int:pk>/', views.expense_details_page, name='expense-details-page'),
 ]
