@@ -49,3 +49,9 @@ def expenses_page(request):
 
 def expense_details_page(request, pk):
     return render(request, "onboarding/expensedetails.html", {"currency_choices": CURRENCY_CHOICES, "expense_id": pk})
+
+def incomes_page(request):
+    return render(request, "onboarding/incomes.html", {"currency_choices": CURRENCY_CHOICES})
+
+def income_details_page(request, pk):
+    return render(request, "onboarding/incomedetails.html", {"currency_choices": CURRENCY_CHOICES, "income_id": pk})

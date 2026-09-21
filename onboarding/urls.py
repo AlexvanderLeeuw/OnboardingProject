@@ -14,4 +14,6 @@ urlpatterns = [
     path('categories/', views.categories_page, name='categories-page'),
     path('expenses/', views.expenses_page, name='expenses-page'),
     path('expense/<int:pk>/', views.expense_details_page, name='expense-details-page'),
+    path('incomes/', views.incomes_page, name='incomes-page'),
+    path('income/<int:pk>/', views.income_details_page, name='income-details-page'),
 ]
