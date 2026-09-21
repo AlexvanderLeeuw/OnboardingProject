@@ -156,6 +156,10 @@
                     This is a monthly recurring income
                 </label>
             </div>
+            <div class="form-group" id="income-expiration-date-group" style="display: none;">
+                <label for="income-expiration-date">Expiration Date (optional)</label>
+                <input type="date" id="income-expiration-date" name="expiration_date">
+            </div>
             <div class="form-group">
                 <label for="income-owner">Owner (readonly)</label>
                 <input type="text" id="income-owner" name="owner" readonly class="readonly-field">
@@ -176,6 +180,9 @@
     const successMessage = document.getElementById("success-message");
     const deleteButton = document.getElementById("delete-button");
     const backLink = document.getElementById("back-link");
+    const incomeRepeatsCheckbox = document.getElementById("income-repeats");
+    const incomeExpirationDateGroup = document.getElementById("income-expiration-date-group");
+    const incomeExpirationDateInput = document.getElementById("income-expiration-date");
     const incomeId = "{{ income_id }}";
     let allCategories = [];
 
@@ -268,6 +275,8 @@
             document.getElementById("income-date").value = income.date;
             document.getElementById("income-repeats").checked = income.repeats;
             document.getElementById("income-owner").value = income.owner;
+            incomeExpirationDateInput.value = income.expiration_date || "";
+            incomeExpirationDateGroup.style.display = income.repeats ? "block" : "none";
 
             loading.style.display = "none";
             form.style.display = "block";
@@ -277,6 +286,15 @@
             showError("Unable to load income details.");
         }
     }
+
+    incomeRepeatsCheckbox.addEventListener("change", () => {
+        if (incomeRepeatsCheckbox.checked) {
+            incomeExpirationDateGroup.style.display = "block";
+        } else {
+            incomeExpirationDateGroup.style.display = "none";
+            incomeExpirationDateInput.value = "";
+        }
+    });
 
     form.addEventListener("submit", async (e) => {
         e.preventDefault();
@@ -288,6 +306,7 @@
         const currency = document.getElementById("income-currency").value;
         const date = document.getElementById("income-date").value;
         const repeats = document.getElementById("income-repeats").checked;
+        const expirationDate = repeats ? (incomeExpirationDateInput.value || null) : null;
 
         try {
             const response = await fetch(`/api/incomes/${incomeId}`, {
@@ -303,6 +322,7 @@
                     currency,
                     date,
                     repeats,
+                    expiration_date: expirationDate,
                 }),
             });
 

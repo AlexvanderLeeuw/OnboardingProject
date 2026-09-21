@@ -43,6 +43,11 @@ class IncomeSerializer(serializers.HyperlinkedModelSerializer):
             duplicate = duplicate.exclude(pk=self.instance.pk)
         if duplicate.exists():
             raise serializers.ValidationError("Identical income already exists. To protect against accidental duplicate entries, please add numbering at end of source if this was intentional")
+
+        expiration_date = attrs.get("expiration_date")
+        date = attrs.get("date", self.instance.date if self.instance else None)
+        if expiration_date and date and expiration_date < date:
+            raise serializers.ValidationError("Expiration date cannot be before the income's date.")
         return attrs
 
     class Meta:
@@ -78,6 +83,11 @@ class ExpenseSerializer(serializers.HyperlinkedModelSerializer):
             duplicate = duplicate.exclude(pk=self.instance.pk)
         if duplicate.exists():
             raise serializers.ValidationError("Identical expense already exists. To protect against accidental duplicate entries, please add numbering at end of source if this was intentional")
+
+        expiration_date = attrs.get("expiration_date")
+        date = attrs.get("date", self.instance.date if self.instance else None)
+        if expiration_date and date and expiration_date < date:
+            raise serializers.ValidationError("Expiration date cannot be before the expense's date.")
         return attrs
 
     class Meta:

@@ -253,10 +253,14 @@
             }
         });
 
-        displayIncomes(filteredIncomes, selectedMonth);
+        displayIncomes(filteredIncomes, selectedMonth, monthStart);
     }
 
-    function displayIncomes(incomes, selectedMonth) {
+    function isRepeatingExpired(income, monthStart) {
+        return income.repeats && income.expiration_date && new Date(income.expiration_date) < monthStart;
+    }
+
+    function displayIncomes(incomes, selectedMonth, monthStart) {
         incomesList.innerHTML = "";
 
         if (incomes.length === 0) {
@@ -285,7 +289,12 @@
             row.className = "income-row";
             row.style.cursor = "pointer";
 
-            const typeDisplay = income.repeats ? 'Repeating' : 'One-time';
+            let typeDisplay;
+            if (!income.repeats) {
+                typeDisplay = 'One-time';
+            } else {
+                typeDisplay = isRepeatingExpired(income, monthStart) ? 'Repeating(expired)' : 'Repeating';
+            }
 
             row.innerHTML = `
                 <td>${income.source}</td>
@@ -310,6 +319,9 @@
 
         const currencySums = {};
         incomes.forEach(income => {
+            if (isRepeatingExpired(income, monthStart)) {
+                return;
+            }
             if (!currencySums[income.currency]) {
                 currencySums[income.currency] = 0;
             }

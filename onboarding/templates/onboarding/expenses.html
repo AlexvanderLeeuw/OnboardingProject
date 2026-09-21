@@ -290,6 +290,10 @@
                     Monthly repeating expense
                 </label>
             </div>
+            <div class="form-group" id="expense-expiration-date-group" style="display: none;">
+                <label for="expense-expiration-date">Expiration Date (optional)</label>
+                <input type="date" id="expense-expiration-date" name="expiration_date">
+            </div>
             <button type="submit">Add Expense</button>
         </form>
     </div>
@@ -300,6 +304,9 @@
     const errorMessage = document.getElementById("error-message");
     const formError = document.getElementById("form-error");
     const addExpenseForm = document.getElementById("add-expense-form");
+    const expenseRepeatsCheckbox = document.getElementById("expense-repeats");
+    const expenseExpirationDateGroup = document.getElementById("expense-expiration-date-group");
+    const expenseExpirationDateInput = document.getElementById("expense-expiration-date");
     const categoryFilter = document.getElementById("category-filter");
     const repeatingFilter = document.getElementById("repeating-filter");
     const searchBar = document.getElementById("search-bar");
@@ -454,6 +461,7 @@
             <th>Amount</th>
             <th>Currency</th>
             <th>Date</th>
+            <th>Expiration Date</th>
         `;
         headerRow.appendChild(headerContent);
         table.appendChild(headerRow);
@@ -469,7 +477,20 @@
             row.className = "expense-row";
             row.style.cursor = "pointer";
 
-            const dateDisplay = expense.repeats ? "Repeats monthly" : new Date(expense.date).toLocaleDateString();
+            const todayStr = new Date().toISOString().split('T')[0];
+            const isExpired = expense.repeats && expense.expiration_date && expense.expiration_date < todayStr;
+
+            let dateDisplay;
+            if (expense.repeats) {
+                dateDisplay = isExpired ? "Expired" : "Repeats monthly";
+            } else {
+                dateDisplay = new Date(expense.date).toLocaleDateString();
+            }
+
+            let expirationDisplay = "";
+            if (expense.repeats) {
+                expirationDisplay = expense.expiration_date ? new Date(expense.expiration_date).toLocaleDateString() : "No expiration";
+            }
 
             row.innerHTML = `
                 <td>${expense.source}</td>
@@ -477,6 +498,7 @@
                 <td>${parseFloat(expense.amount).toFixed(2)}</td>
                 <td>${expense.currency}</td>
                 <td>${dateDisplay}</td>
+                <td>${expirationDisplay}</td>
             `;
 
             row.onclick = () => {
@@ -561,6 +583,15 @@
     searchBar.addEventListener("input", filterAndDisplayExpenses);
     sortBy.addEventListener("change", filterAndDisplayExpenses);
 
+    expenseRepeatsCheckbox.addEventListener("change", () => {
+        if (expenseRepeatsCheckbox.checked) {
+            expenseExpirationDateGroup.style.display = "block";
+        } else {
+            expenseExpirationDateGroup.style.display = "none";
+            expenseExpirationDateInput.value = "";
+        }
+    });
+
     addExpenseForm.addEventListener("submit", async (e) => {
         e.preventDefault();
         hideFormError();
@@ -571,6 +602,7 @@
         const currency = document.getElementById("expense-currency").value;
         const date = document.getElementById("expense-date").value;
         const repeats = document.getElementById("expense-repeats").checked;
+        const expirationDate = repeats ? (expenseExpirationDateInput.value || null) : null;
 
         try {
             const response = await fetch("{% url 'expense-list' %}", {
@@ -586,6 +618,7 @@
                     currency,
                     date,
                     repeats,
+                    expiration_date: expirationDate,
                 }),
             });
 
@@ -597,6 +630,7 @@
             }
 
             addExpenseForm.reset();
+            expenseExpirationDateGroup.style.display = "none";
             window.location.reload();
         } catch (error) {
             console.error(error);

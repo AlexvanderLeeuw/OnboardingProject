@@ -442,13 +442,19 @@
                 }
             } else {
                 if (entryDate <= upTo) {
-                    const count = countMonthlyOccurrences(entry.date, upToDate);
+                    const hasExpiration = !!entry.expiration_date;
+                    const expirationDate = hasExpiration ? new Date(entry.expiration_date) : null;
+                    const isExpired = hasExpiration && expirationDate < upTo;
+                    const countingUpTo = isExpired ? entry.expiration_date : upToDate;
+
+                    const count = countMonthlyOccurrences(entry.date, countingUpTo);
                     const displayAmount = showMonthlyTotals ? parseFloat(entry.amount) * count : parseFloat(entry.amount);
                     processedEntries.push({
                         ...entry,
                         displayAmount: displayAmount,
                         occurrenceCount: count,
-                        isRepeating: true
+                        isRepeating: true,
+                        isExpired: isExpired
                     });
                 }
             }
@@ -551,7 +557,7 @@
 
             const meta = document.createElement("div");
             meta.className = "entry-meta";
-            let metaText = entry.repeats ? "Repeating" : "One-time";
+            let metaText = entry.repeats ? (entry.isExpired ? "Repeating(expired)" : "Repeating") : "One-time";
             if (entry.repeats && entry.occurrenceCount > 1) {
                 metaText += ` (${entry.occurrenceCount}x)`;
             }

@@ -253,10 +253,14 @@
             }
         });
 
-        displayExpenses(filteredExpenses, selectedMonth);
+        displayExpenses(filteredExpenses, selectedMonth, monthStart);
     }
 
-    function displayExpenses(expenses, selectedMonth) {
+    function isRepeatingExpired(expense, monthStart) {
+        return expense.repeats && expense.expiration_date && new Date(expense.expiration_date) < monthStart;
+    }
+
+    function displayExpenses(expenses, selectedMonth, monthStart) {
         expensesList.innerHTML = "";
 
         if (expenses.length === 0) {
@@ -285,7 +289,12 @@
             row.className = "expense-row";
             row.style.cursor = "pointer";
 
-            const typeDisplay = expense.repeats ? 'Repeating' : 'One-time';
+            let typeDisplay;
+            if (!expense.repeats) {
+                typeDisplay = 'One-time';
+            } else {
+                typeDisplay = isRepeatingExpired(expense, monthStart) ? 'Repeating(expired)' : 'Repeating';
+            }
 
             row.innerHTML = `
                 <td>${expense.source}</td>
@@ -310,6 +319,9 @@
 
         const currencySums = {};
         expenses.forEach(expense => {
+            if (isRepeatingExpired(expense, monthStart)) {
+                return;
+            }
             if (!currencySums[expense.currency]) {
                 currencySums[expense.currency] = 0;
             }

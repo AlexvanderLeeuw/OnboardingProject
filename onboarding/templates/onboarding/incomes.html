@@ -290,6 +290,10 @@
                     Monthly repeating income
                 </label>
             </div>
+            <div class="form-group" id="income-expiration-date-group" style="display: none;">
+                <label for="income-expiration-date">Expiration Date (optional)</label>
+                <input type="date" id="income-expiration-date" name="expiration_date">
+            </div>
             <button type="submit">Add Income</button>
         </form>
     </div>
@@ -300,6 +304,9 @@
     const errorMessage = document.getElementById("error-message");
     const formError = document.getElementById("form-error");
     const addIncomeForm = document.getElementById("add-income-form");
+    const incomeRepeatsCheckbox = document.getElementById("income-repeats");
+    const incomeExpirationDateGroup = document.getElementById("income-expiration-date-group");
+    const incomeExpirationDateInput = document.getElementById("income-expiration-date");
     const categoryFilter = document.getElementById("category-filter");
     const repeatingFilter = document.getElementById("repeating-filter");
     const searchBar = document.getElementById("search-bar");
@@ -454,6 +461,7 @@
             <th>Amount</th>
             <th>Currency</th>
             <th>Date</th>
+            <th>Expiration Date</th>
         `;
         headerRow.appendChild(headerContent);
         table.appendChild(headerRow);
@@ -469,7 +477,20 @@
             row.className = "income-row";
             row.style.cursor = "pointer";
 
-            const dateDisplay = income.repeats ? "Repeats monthly" : new Date(income.date).toLocaleDateString();
+            const todayStr = new Date().toISOString().split('T')[0];
+            const isExpired = income.repeats && income.expiration_date && income.expiration_date < todayStr;
+
+            let dateDisplay;
+            if (income.repeats) {
+                dateDisplay = isExpired ? "Expired" : "Repeats monthly";
+            } else {
+                dateDisplay = new Date(income.date).toLocaleDateString();
+            }
+
+            let expirationDisplay = "";
+            if (income.repeats) {
+                expirationDisplay = income.expiration_date ? new Date(income.expiration_date).toLocaleDateString() : "No expiration";
+            }
 
             row.innerHTML = `
                 <td>${income.source}</td>
@@ -477,6 +498,7 @@
                 <td>${parseFloat(income.amount).toFixed(2)}</td>
                 <td>${income.currency}</td>
                 <td>${dateDisplay}</td>
+                <td>${expirationDisplay}</td>
             `;
 
             row.onclick = () => {
@@ -561,6 +583,15 @@
     searchBar.addEventListener("input", filterAndDisplayIncomes);
     sortBy.addEventListener("change", filterAndDisplayIncomes);
 
+    incomeRepeatsCheckbox.addEventListener("change", () => {
+        if (incomeRepeatsCheckbox.checked) {
+            incomeExpirationDateGroup.style.display = "block";
+        } else {
+            incomeExpirationDateGroup.style.display = "none";
+            incomeExpirationDateInput.value = "";
+        }
+    });
+
     addIncomeForm.addEventListener("submit", async (e) => {
         e.preventDefault();
         hideFormError();
@@ -571,6 +602,7 @@
         const currency = document.getElementById("income-currency").value;
         const date = document.getElementById("income-date").value;
         const repeats = document.getElementById("income-repeats").checked;
+        const expirationDate = repeats ? (incomeExpirationDateInput.value || null) : null;
 
         try {
             const response = await fetch("{% url 'income-list' %}", {
@@ -586,6 +618,7 @@
                     currency,
                     date,
                     repeats,
+                    expiration_date: expirationDate,
                 }),
             });
 
@@ -597,6 +630,7 @@
             }
 
             addIncomeForm.reset();
+            incomeExpirationDateGroup.style.display = "none";
             window.location.reload();
         } catch (error) {
             console.error(error);
