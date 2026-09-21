@@ -40,7 +40,7 @@ class IncomeSerializer(serializers.HyperlinkedModelSerializer):
             date=attrs.get("date"),
         )
         if self.instance:
-            duplicate = duplicate.exclude(pk=self.isntance.pk)
+            duplicate = duplicate.exclude(pk=self.instance.pk)
         if duplicate.exists():
             raise serializers.ValidationError("Identical income already exists. To protect against accidental duplicate entries, please add numbering at end of source if this was intentional")
         return attrs
@@ -75,7 +75,7 @@ class ExpenseSerializer(serializers.HyperlinkedModelSerializer):
             date=attrs.get("date"),
         )
         if self.instance:
-            duplicate = duplicate.exclude(pk=self.isntance.pk)
+            duplicate = duplicate.exclude(pk=self.instance.pk)
         if duplicate.exists():
             raise serializers.ValidationError("Identical expense already exists. To protect against accidental duplicate entries, please add numbering at end of source if this was intentional")
         return attrs

@@ -1,0 +1,136 @@
+{% extends "onboarding/base.html" %}
+{% block title %}Categories - Finance Manager{% endblock %}
+{% block extra_css %}
+<style>
+    .categories-container {
+        max-width: 700px;
+        margin: 0 auto;
+    }
+    .categories-container h1 {
+        margin-bottom: 24px;
+    }
+    .category-list {
+        margin-bottom: 40px;
+    }
+    .category-item {
+        background-color: white;
+        padding: 14px 18px;
+        margin-bottom: 8px;
+        border-radius: 6px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    }
+    .category-form {
+        background-color: white;
+        padding: 24px;
+        border-radius: 6px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    }
+    .category-form label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: bold;
+    }
+    .category-form input {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 15px;
+    }
+    .category-form button {
+        margin-top: 12px;
+        padding: 10px 18px;
+        background-color: #9b46e5;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-size: 15px;
+        cursor: pointer;
+    }
+    .error-message {
+        color: #dc2626;
+        margin-bottom: 12px;
+    }
+    .loading-message {
+        color: #678;
+    }
+</style>
+{% endblock %}
+{% block content %}
+<div class="categories-container">
+    <h1>Categories</h1>
+    <div class="category-list" id="category-list">
+        <p class="loading-message">Loading categories...</p>
+    </div>
+    <div class="category-form">
+        <div id="error-message" class="error-message"></div>
+        <form id="category-form">
+            <label for="category-name">New category</label>
+            <input
+                type="text"
+                id="category-name"
+                name="name"
+                placeholder="Enter category name"
+                required
+            >
+            <button type="submit">Add category</button>
+        </form>
+    </div>
+</div>
+<script>
+    const categoryList = document.getElementById("category-list");
+    const categoryForm = document.getElementById("category-form");
+    const categoryName = document.getElementById("category-name");
+    const errorMessage = document.getElementById("error-message");
+    async function loadCategories() {
+    try {
+        const response = await fetch("{% url 'category-list' %}");
+
+        if (!response.ok) {
+            throw new Error("Unable to load categories.");
+        }
+
+        const data = await response.json();
+        const categories = data.results;
+
+        categoryList.innerHTML = "";
+
+        if (categories.length === 0) {
+            categoryList.innerHTML = "<p>No categories yet.</p>";
+            return;
+        }
+
+        categories.forEach(category => {
+            const categoryElement = document.createElement("div");
+            categoryElement.className = "category-item";
+            categoryElement.textContent = category.name;
+
+            categoryList.appendChild(categoryElement);
+        });
+
+    } catch (error) {
+        console.error(error);
+
+        categoryList.innerHTML =
+            '<p class="error-message">Unable to load categories.</p>';
+    }
+}
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== "") {
+                const cookies = document.cookie.split(";");
+
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+
+                    if (cookie.substring(0, name.length + 1) === (name + "=")) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        loadCategories();
+</script>
+{% endblock %}
