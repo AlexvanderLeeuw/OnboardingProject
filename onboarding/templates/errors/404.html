@@ -1,0 +1,15 @@
+﻿{% extends "errors/base_error.html" %}
+
+{% block error_title %}404 - Page Not Found{% endblock %}
+
+{% block error_content %}
+<div class="error-code">404</div>
+<div class="error-title">Page Not Found</div>
+<div class="error-message">
+    The page you're looking for doesn't exist or has been moved. This might happen if you followed an incorrect link or if the resource has been deleted.
+</div>
+<div class="error-actions">
+    <a href="/categories/" class="btn btn-primary">Go to Categories</a>
+    <a href="javascript:history.back()" class="btn btn-secondary">Go Back</a>
+</div>
+{% endblock %}
