@@ -18,4 +18,5 @@ urlpatterns = [
     path('income/<int:pk>/', views.income_details_page, name='income-details-page'),
     path('monthly-expenses/', views.monthly_expenses_page, name='monthly-expenses-page'),
     path('monthly-incomes/', views.monthly_incomes_page, name='monthly-incomes-page'),
+    path('expense-income-comparison/', views.expense_income_comparison_page, name='expense-income-comparison-page'),
 ]

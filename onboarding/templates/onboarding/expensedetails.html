@@ -185,7 +185,8 @@
 
         const urlMap = {
             "monthly-expenses": "{% url 'monthly-expenses-page' %}",
-            "expenses": "{% url 'expenses-page' %}"
+            "expenses": "{% url 'expenses-page' %}",
+            "expense-income-comparison": "{% url 'expense-income-comparison-page' %}"
         };
 
         return urlMap[returnTo] || "{% url 'expenses-page' %}";

@@ -61,3 +61,6 @@ def monthly_expenses_page(request):
 
 def monthly_incomes_page(request):
     return render(request, "onboarding/monthlyincomes.html", {"currency_choices": CURRENCY_CHOICES})
+
+def expense_income_comparison_page(request):
+    return render(request, "onboarding/expenseincomecomparison.html", {"currency_choices": CURRENCY_CHOICES})

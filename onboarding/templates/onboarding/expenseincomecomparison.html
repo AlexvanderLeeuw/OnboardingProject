@@ -1,0 +1,763 @@
+{% extends "onboarding/base.html" %}
+{% block title %}Expense & Income Comparison - Finance Manager{% endblock %}
+{% block extra_css %}
+<style>
+    .comparison-container {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+    .comparison-container h1 {
+        margin-bottom: 24px;
+    }
+    .filters-section {
+        background-color: white;
+        padding: 20px;
+        border-radius: 6px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        margin-bottom: 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+    .filter-group {
+        flex: 1;
+        min-width: 200px;
+    }
+    .filter-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: bold;
+        font-size: 14px;
+    }
+    .filter-group input {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 15px;
+    }
+    .toggle-section {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .toggle-section label {
+        font-weight: normal;
+        margin-bottom: 0;
+    }
+    .toggle-switch {
+        position: relative;
+        width: 50px;
+        height: 28px;
+        background-color: #ccc;
+        border-radius: 14px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+    .toggle-switch.active {
+        background-color: #9b46e5;
+    }
+    .toggle-switch::after {
+        content: '';
+        position: absolute;
+        width: 24px;
+        height: 24px;
+        background-color: white;
+        border-radius: 50%;
+        top: 2px;
+        left: 2px;
+        transition: left 0.3s;
+    }
+    .toggle-switch.active::after {
+        left: 24px;
+    }
+    .overview-section {
+        background-color: white;
+        border-radius: 6px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        margin-bottom: 40px;
+        padding: 20px;
+        max-height: 400px;
+        box-sizing: border-box;
+        overflow-y: auto;
+    }
+    #content-container {
+        display: flex;
+        gap: 20px;
+        flex-wrap: nowrap;
+    }
+    .column {
+        flex: 1 1 50%;
+        min-width: 0;
+    }
+    .column-header {
+        font-weight: bold;
+        font-size: 16px;
+        margin-bottom: 16px;
+        padding-bottom: 8px;
+        border-bottom: 2px solid #eee;
+    }
+    .currency-group {
+        margin-bottom: 20px;
+    }
+    .currency-label {
+        font-weight: bold;
+        font-size: 14px;
+        color: #333;
+        margin-bottom: 8px;
+        padding: 4px 0;
+    }
+    .entry-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px;
+        margin-bottom: 4px;
+        border-radius: 4px;
+        border: 1px solid #f0f0f0;
+        cursor: pointer;
+        transition: background-color 0.2s, border-color 0.2s;
+        font-size: 14px;
+    }
+    .entry-row:hover {
+        background-color: #f9f9f9;
+        border-color: #ddd;
+    }
+    .entry-info {
+        flex: 1;
+    }
+    .entry-source {
+        font-weight: 500;
+        color: #222;
+    }
+    .entry-meta {
+        font-size: 12px;
+        color: #678;
+        margin-top: 2px;
+    }
+    .entry-amount {
+        font-weight: bold;
+        color: #9b46e5;
+        text-align: right;
+        min-width: 100px;
+        margin-left: 12px;
+    }
+    .repeating-badge {
+        display: inline-block;
+        background-color: #e5e7eb;
+        color: #374151;
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-size: 11px;
+        font-weight: 500;
+        margin-left: 8px;
+    }
+    .counter-badge {
+        display: inline-block;
+        background-color: #d1d5db;
+        color: #374151;
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-size: 11px;
+        font-weight: 500;
+        margin-left: 8px;
+    }
+    .summary-section {
+        background-color: #f9f9f9;
+        padding: 20px;
+        border-radius: 6px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        margin-bottom: 20px;
+        max-height: 500px;
+        overflow-y: auto;
+    }
+    .summary-title {
+        font-weight: bold;
+        font-size: 16px;
+        margin-bottom: 16px;
+        padding-bottom: 8px;
+        border-bottom: 2px solid #eee;
+    }
+    .summary-currency-block {
+        margin-bottom: 20px;
+    }
+    .summary-section-divider {
+        border-bottom: 1px solid #ddd;
+        margin: 12px 0;
+    }
+    .summary-currency-title {
+        font-weight: bold;
+        font-size: 14px;
+        color: #333;
+        margin-bottom: 12px;
+    }
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 6px;
+        font-size: 14px;
+    }
+    .summary-row:last-child {
+        margin-bottom: 0;
+    }
+    .summary-label {
+        color: #555;
+    }
+    .summary-amount {
+        font-weight: bold;
+        color: #9b46e5;
+    }
+    .final-income-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 6px;
+        font-size: 14px;
+        font-weight: bold;
+        color: #333;
+    }
+    .final-income-amount {
+        font-weight: bold;
+        font-size: 16px;
+    }
+    .positive {
+        color: #059669;
+    }
+    .negative {
+        color: #dc2626;
+    }
+    .notice-text {
+        background-color: #f0f4f8;
+        padding: 12px;
+        border-left: 4px solid #9b46e5;
+        border-radius: 4px;
+        font-size: 13px;
+        color: #555;
+        margin-top: 20px;
+    }
+    .error-message {
+        color: #dc2626;
+        margin-bottom: 12px;
+        padding: 12px;
+        background-color: #fee2e2;
+        border-radius: 4px;
+    }
+    .loading-message {
+        color: #678;
+        text-align: center;
+        padding: 40px 16px;
+    }
+    .empty-message {
+        color: #678;
+        text-align: center;
+        padding: 20px 16px;
+    }
+    @media (max-width: 1024px) {
+        .overview-section {
+            flex-direction: column;
+            max-height: none;
+        }
+        .column {
+            min-width: 100%;
+        }
+    }
+    @media (max-width: 768px) {
+        .filters-section {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .filter-group,
+        .toggle-section {
+            min-width: 100%;
+        }
+        .toggle-section {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .overview-section {
+            padding: 12px;
+            gap: 12px;
+        }
+        .entry-row {
+            font-size: 13px;
+            padding: 8px;
+        }
+    }
+</style>
+{% endblock %}
+{% block content %}
+<div class="comparison-container">
+    <h1>Income vs Expenses Comparison</h1>
+
+    <div class="filters-section">
+        <div id="error-message" class="error-message" style="display: none;"></div>
+        <div class="filter-group">
+            <label for="date-picker">Select Date (up to)</label>
+            <input type="date" id="date-picker">
+        </div>
+        <div class="toggle-section">
+            <label for="monthly-toggle">Show Monthly Totals</label>
+            <div id="monthly-toggle" class="toggle-switch active"></div>
+        </div>
+    </div>
+
+    <div class="overview-section">
+        <div id="content-container">
+            <p class="loading-message">Loading data...</p>
+        </div>
+    </div>
+
+    <div id="summary-container"></div>
+
+    <div class="notice-text">
+        NOTICE: The data shown here is a projection based on your recorded incomes and expenses. It can only be as accurate as the information entered into the database.
+    </div>
+</div>
+
+<script>
+    const contentContainer = document.getElementById("content-container");
+    const summaryContainer = document.getElementById("summary-container");
+    const errorMessage = document.getElementById("error-message");
+    const datePicker = document.getElementById("date-picker");
+    const monthlyToggle = document.getElementById("monthly-toggle");
+    let allExpenses = [];
+    let allIncomes = [];
+    let showMonthlyTotals = true;
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== "") {
+            const cookies = document.cookie.split(";");
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + "=")) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function initializeDatePicker() {
+        const today = new Date();
+        datePicker.value = today.toISOString().split('T')[0];
+    }
+
+    function countMonthlyOccurrences(startDate, upToDate) {
+        const start = new Date(startDate);
+        const upTo = new Date(upToDate);
+
+        let count = 1;
+        let current = new Date(start);
+
+        while (true) {
+            current = new Date(current.getFullYear(), current.getMonth() + 1, current.getDate());
+            if (current <= upTo) {
+                count++;
+            } else {
+                break;
+            }
+        }
+
+        return count;
+    }
+
+    async function loadExpenses() {
+        try {
+            allExpenses = [];
+            let url = "{% url 'expense-list' %}";
+            let hasMore = true;
+
+            while (hasMore) {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error("Unable to load expenses.");
+                }
+                const data = await response.json();
+                allExpenses = allExpenses.concat(data.results);
+
+                if (data.next) {
+                    url = data.next;
+                } else {
+                    hasMore = false;
+                }
+            }
+
+            return true;
+        } catch (error) {
+            console.error(error);
+            showError("Unable to load expenses.");
+            return false;
+        }
+    }
+
+    async function loadIncomes() {
+        try {
+            allIncomes = [];
+            let url = "{% url 'income-list' %}";
+            let hasMore = true;
+
+            while (hasMore) {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error("Unable to load incomes.");
+                }
+                const data = await response.json();
+                allIncomes = allIncomes.concat(data.results);
+
+                if (data.next) {
+                    url = data.next;
+                } else {
+                    hasMore = false;
+                }
+            }
+
+            return true;
+        } catch (error) {
+            console.error(error);
+            showError("Unable to load incomes.");
+            return false;
+        }
+    }
+
+    function filterAndProcessEntries(entries, upToDate) {
+        const upTo = new Date(upToDate);
+        const processedEntries = [];
+
+        entries.forEach(entry => {
+            const entryDate = new Date(entry.date);
+
+            if (!entry.repeats) {
+                if (entryDate <= upTo) {
+                    processedEntries.push({
+                        ...entry,
+                        displayAmount: parseFloat(entry.amount),
+                        occurrenceCount: 1,
+                        isRepeating: false
+                    });
+                }
+            } else {
+                if (entryDate <= upTo) {
+                    const count = countMonthlyOccurrences(entry.date, upToDate);
+                    const displayAmount = showMonthlyTotals ? parseFloat(entry.amount) * count : parseFloat(entry.amount);
+                    processedEntries.push({
+                        ...entry,
+                        displayAmount: displayAmount,
+                        occurrenceCount: count,
+                        isRepeating: true
+                    });
+                }
+            }
+        });
+
+        return processedEntries;
+    }
+
+    function sortEntriesByCurrencyAndAmount(entries) {
+        const sorted = entries.slice();
+        sorted.sort((a, b) => {
+            if (a.currency !== b.currency) {
+                return a.currency.localeCompare(b.currency);
+            }
+            return b.displayAmount - a.displayAmount;
+        });
+        return sorted;
+    }
+
+    function displayComparison() {
+        const upToDate = datePicker.value;
+        if (!upToDate) {
+            contentContainer.innerHTML = '<p class="empty-message">Please select a date.</p>';
+            return;
+        }
+
+        const processedExpenses = filterAndProcessEntries(allExpenses, upToDate);
+        const processedIncomes = filterAndProcessEntries(allIncomes, upToDate);
+
+        const sortedExpenses = sortEntriesByCurrencyAndAmount(processedExpenses);
+        const sortedIncomes = sortEntriesByCurrencyAndAmount(processedIncomes);
+
+        contentContainer.innerHTML = "";
+
+        const expensesColumn = document.createElement("div");
+        expensesColumn.className = "column";
+        expensesColumn.innerHTML = '<div class="column-header">Expenses</div>';
+
+        if (sortedExpenses.length === 0) {
+            const emptyMsg = document.createElement("p");
+            emptyMsg.className = "empty-message";
+            emptyMsg.textContent = "No expenses up to this date.";
+            expensesColumn.appendChild(emptyMsg);
+        } else {
+            const expensesContent = createEntriesContent(sortedExpenses, false);
+            expensesColumn.appendChild(expensesContent);
+        }
+
+        const incomesColumn = document.createElement("div");
+        incomesColumn.className = "column";
+        incomesColumn.innerHTML = '<div class="column-header">Incomes</div>';
+
+        if (sortedIncomes.length === 0) {
+            const emptyMsg = document.createElement("p");
+            emptyMsg.className = "empty-message";
+            emptyMsg.textContent = "No incomes up to this date.";
+            incomesColumn.appendChild(emptyMsg);
+        } else {
+            const incomesContent = createEntriesContent(sortedIncomes, true);
+            incomesColumn.appendChild(incomesContent);
+        }
+
+        contentContainer.appendChild(expensesColumn);
+        contentContainer.appendChild(incomesColumn);
+
+        displaySummary(sortedExpenses, sortedIncomes, upToDate);
+    }
+
+    function createEntriesContent(entries, isIncome) {
+        const container = document.createElement("div");
+        let currentCurrency = null;
+        let currencyGroup = null;
+
+        entries.forEach(entry => {
+            if (entry.currency !== currentCurrency) {
+                if (currencyGroup !== null) {
+                    container.appendChild(currencyGroup);
+                }
+                currentCurrency = entry.currency;
+                currencyGroup = document.createElement("div");
+                currencyGroup.className = "currency-group";
+
+                const currencyLabel = document.createElement("div");
+                currencyLabel.className = "currency-label";
+                currencyLabel.textContent = currentCurrency;
+                currencyGroup.appendChild(currencyLabel);
+            }
+
+            const row = document.createElement("div");
+            row.className = "entry-row";
+            row.style.cursor = "pointer";
+
+            const info = document.createElement("div");
+            info.className = "entry-info";
+
+            const source = document.createElement("div");
+            source.className = "entry-source";
+            source.textContent = entry.source;
+            info.appendChild(source);
+
+            const meta = document.createElement("div");
+            meta.className = "entry-meta";
+            let metaText = entry.repeats ? "Repeating" : "One-time";
+            if (entry.repeats && entry.occurrenceCount > 1) {
+                metaText += ` (${entry.occurrenceCount}x)`;
+            }
+            meta.textContent = metaText;
+            info.appendChild(meta);
+
+            const amountDiv = document.createElement("div");
+            amountDiv.className = "entry-amount";
+            amountDiv.textContent = parseFloat(entry.displayAmount).toFixed(2);
+
+            row.appendChild(info);
+            row.appendChild(amountDiv);
+
+            row.onclick = () => {
+                const entryType = isIncome ? "income" : "expense";
+                const returnTo = "expense-income-comparison";
+                window.location.href = `/${entryType}/${entry.id}/?return_to=${returnTo}`;
+            };
+
+            currencyGroup.appendChild(row);
+        });
+
+        if (currencyGroup !== null) {
+            container.appendChild(currencyGroup);
+        }
+
+        return container;
+    }
+
+    function displaySummary(expenses, incomes, upToDate) {
+        summaryContainer.innerHTML = "";
+
+        const summarySection = document.createElement("div");
+        summarySection.className = "summary-section";
+
+        const title = document.createElement("div");
+        title.className = "summary-title";
+        title.textContent = "Summary";
+        summarySection.appendChild(title);
+
+        // Group by currency
+        const expensesByCurrency = {};
+        const incomesByCurrency = {};
+
+        expenses.forEach(exp => {
+            if (!expensesByCurrency[exp.currency]) {
+                expensesByCurrency[exp.currency] = { repeating: 0, oneTime: 0 };
+            }
+            if (exp.isRepeating) {
+                expensesByCurrency[exp.currency].repeating += exp.displayAmount;
+            } else {
+                expensesByCurrency[exp.currency].oneTime += exp.displayAmount;
+            }
+        });
+
+        incomes.forEach(inc => {
+            if (!incomesByCurrency[inc.currency]) {
+                incomesByCurrency[inc.currency] = { repeating: 0, oneTime: 0 };
+            }
+            if (inc.isRepeating) {
+                incomesByCurrency[inc.currency].repeating += inc.displayAmount;
+            } else {
+                incomesByCurrency[inc.currency].oneTime += inc.displayAmount;
+            }
+        });
+
+        const allCurrencies = new Set([
+            ...Object.keys(expensesByCurrency),
+            ...Object.keys(incomesByCurrency)
+        ]);
+        const sortedCurrencies = Array.from(allCurrencies).sort();
+
+        sortedCurrencies.forEach(currency => {
+            const block = document.createElement("div");
+            block.className = "summary-currency-block";
+
+            const title = document.createElement("div");
+            title.className = "summary-currency-title";
+            title.textContent = currency;
+            block.appendChild(title);
+
+            const expData = expensesByCurrency[currency] || { repeating: 0, oneTime: 0 };
+            const incData = incomesByCurrency[currency] || { repeating: 0, oneTime: 0 };
+
+            // Expenses
+            if (expData.repeating > 0 || expData.oneTime > 0) {
+                const expRepeatingRow = document.createElement("div");
+                expRepeatingRow.className = "summary-row";
+                expRepeatingRow.innerHTML = `
+                    <span class="summary-label">Expenses (Repeating)</span>
+                    <span class="summary-amount">${expData.repeating.toFixed(2)}</span>
+                `;
+                block.appendChild(expRepeatingRow);
+
+                const expOneTimeRow = document.createElement("div");
+                expOneTimeRow.className = "summary-row";
+                expOneTimeRow.innerHTML = `
+                    <span class="summary-label">Expenses (One-time)</span>
+                    <span class="summary-amount">${expData.oneTime.toFixed(2)}</span>
+                `;
+                block.appendChild(expOneTimeRow);
+
+                const expTotalRow = document.createElement("div");
+                expTotalRow.className = "summary-row";
+                expTotalRow.style.marginBottom = "12px";
+                expTotalRow.style.fontWeight = "bold";
+                const expTotal = expData.repeating + expData.oneTime;
+                expTotalRow.innerHTML = `
+                    <span class="summary-label">Total Expenses</span>
+                    <span class="summary-amount">${expTotal.toFixed(2)}</span>
+                `;
+                block.appendChild(expTotalRow);
+
+                const expDivider = document.createElement("div");
+                expDivider.className = "summary-section-divider";
+                block.appendChild(expDivider);
+            }
+
+            // Incomes
+            if (incData.repeating > 0 || incData.oneTime > 0) {
+                const incRepeatingRow = document.createElement("div");
+                incRepeatingRow.className = "summary-row";
+                incRepeatingRow.innerHTML = `
+                    <span class="summary-label">Incomes (Repeating)</span>
+                    <span class="summary-amount">${incData.repeating.toFixed(2)}</span>
+                `;
+                block.appendChild(incRepeatingRow);
+
+                const incOneTimeRow = document.createElement("div");
+                incOneTimeRow.className = "summary-row";
+                incOneTimeRow.innerHTML = `
+                    <span class="summary-label">Incomes (One-time)</span>
+                    <span class="summary-amount">${incData.oneTime.toFixed(2)}</span>
+                `;
+                block.appendChild(incOneTimeRow);
+
+                const incTotalRow = document.createElement("div");
+                incTotalRow.className = "summary-row";
+                incTotalRow.style.marginBottom = "12px";
+                incTotalRow.style.fontWeight = "bold";
+                const incTotal = incData.repeating + incData.oneTime;
+                incTotalRow.innerHTML = `
+                    <span class="summary-label">Total Incomes</span>
+                    <span class="summary-amount">${incTotal.toFixed(2)}</span>
+                `;
+                block.appendChild(incTotalRow);
+
+                const incDivider = document.createElement("div");
+                incDivider.className = "summary-section-divider";
+                block.appendChild(incDivider);
+            }
+
+            // Final income (incomes - expenses)
+            const expTotal = expData.repeating + expData.oneTime;
+            const incTotal = incData.repeating + incData.oneTime;
+            const finalIncome = incTotal - expTotal;
+
+            const finalRow = document.createElement("div");
+            finalRow.className = "final-income-row";
+            const finalAmountSpan = document.createElement("span");
+            finalAmountSpan.className = "final-income-amount";
+            finalAmountSpan.textContent = finalIncome.toFixed(2);
+
+            if (finalIncome >= 0) {
+                finalAmountSpan.classList.add("positive");
+            } else {
+                finalAmountSpan.classList.add("negative");
+            }
+
+            finalRow.appendChild(document.createTextNode("Final Income: "));
+            finalRow.appendChild(finalAmountSpan);
+            block.appendChild(finalRow);
+
+            const finalDivider = document.createElement("div");
+            finalDivider.className = "summary-section-divider";
+            block.appendChild(finalDivider);
+
+            summarySection.appendChild(block);
+        });
+
+        summaryContainer.appendChild(summarySection);
+    }
+
+    function showError(message) {
+        errorMessage.textContent = message;
+        errorMessage.style.display = "block";
+    }
+
+    monthlyToggle.addEventListener("click", () => {
+        showMonthlyTotals = !showMonthlyTotals;
+        monthlyToggle.classList.toggle("active");
+        displayComparison();
+    });
+
+    datePicker.addEventListener("change", displayComparison);
+
+    async function initialize() {
+        initializeDatePicker();
+        const expensesLoaded = await loadExpenses();
+        const incomesLoaded = await loadIncomes();
+
+        if (expensesLoaded && incomesLoaded) {
+            displayComparison();
+        }
+    }
+
+    initialize();
+</script>
+{% endblock %}
