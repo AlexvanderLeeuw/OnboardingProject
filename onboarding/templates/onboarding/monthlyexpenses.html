@@ -1,0 +1,365 @@
+{% extends "onboarding/base.html" %}
+{% block title %}Monthly Expenses - Finance Manager{% endblock %}
+{% block extra_css %}
+<style>
+    .monthly-expenses-container {
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+    .monthly-expenses-container h1 {
+        margin-bottom: 24px;
+    }
+    .filters-section {
+        background-color: white;
+        padding: 20px;
+        border-radius: 6px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        margin-bottom: 24px;
+    }
+    .filter-row {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        align-items: flex-end;
+    }
+    .filter-group {
+        flex: 1;
+        min-width: 200px;
+    }
+    .filter-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: bold;
+        font-size: 14px;
+    }
+    .filter-group input {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 15px;
+    }
+    .overview-section {
+        background-color: white;
+        border-radius: 6px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        margin-bottom: 40px;
+        overflow-x: auto;
+    }
+    .expenses-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .expenses-table th {
+        background-color: #f9f9f9;
+        padding: 12px 16px;
+        text-align: left;
+        font-weight: bold;
+        border-bottom: 2px solid #eee;
+        font-size: 14px;
+    }
+    .expenses-table td {
+        padding: 12px 16px;
+        border-bottom: 1px solid #eee;
+    }
+    .expense-row {
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+    .expense-row:hover {
+        background-color: #f9f9f9;
+    }
+    .repeating-badge {
+        display: inline-block;
+        background-color: #e5e7eb;
+        color: #374151;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 13px;
+        font-weight: 500;
+    }
+    .summary-section {
+        background-color: #f9f9f9;
+        padding: 16px;
+        border-top: 2px solid #eee;
+    }
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+    }
+    .summary-row:last-child {
+        margin-bottom: 0;
+    }
+    .summary-label {
+        font-weight: bold;
+        color: #333;
+    }
+    .summary-amount {
+        font-weight: bold;
+        color: #9b46e5;
+        font-size: 16px;
+    }
+    .error-message {
+        color: #dc2626;
+        margin-bottom: 12px;
+        padding: 12px;
+        background-color: #fee2e2;
+        border-radius: 4px;
+    }
+    .loading-message {
+        color: #678;
+        text-align: center;
+        padding: 40px 16px;
+    }
+    .empty-message {
+        color: #678;
+        text-align: center;
+        padding: 40px 16px;
+    }
+    @media (max-width: 768px) {
+        .filter-row {
+            flex-direction: column;
+        }
+        .filter-group {
+            min-width: 100%;
+        }
+        .expenses-table {
+            font-size: 14px;
+        }
+        .expenses-table th,
+        .expenses-table td {
+            padding: 8px;
+        }
+        .summary-row {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 4px;
+        }
+    }
+</style>
+{% endblock %}
+{% block content %}
+<div class="monthly-expenses-container">
+    <h1>Monthly Expenses</h1>
+    <div class="filters-section">
+        <div id="error-message" class="error-message" style="display: none;"></div>
+        <div class="filter-row">
+            <div class="filter-group">
+                <label for="month-picker">Select Month</label>
+                <input type="month" id="month-picker">
+            </div>
+        </div>
+    </div>
+
+    <div class="overview-section">
+        <div id="expenses-list">
+            <p class="loading-message">Loading expenses...</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    const expensesList = document.getElementById("expenses-list");
+    const errorMessage = document.getElementById("error-message");
+    const monthPicker = document.getElementById("month-picker");
+    let allExpenses = [];
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== "") {
+            const cookies = document.cookie.split(";");
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + "=")) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function getYearMonth(date) {
+        const d = new Date(date);
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        return `${year}-${month}`;
+    }
+
+    function getMonthStart(yearMonth) {
+        const [year, month] = yearMonth.split('-');
+        return new Date(parseInt(year), parseInt(month) - 1, 1);
+    }
+
+    function getMonthEnd(yearMonth) {
+        const [year, month] = yearMonth.split('-');
+        return new Date(parseInt(year), parseInt(month), 0);
+    }
+
+    function initializeMonthPicker() {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        monthPicker.value = `${year}-${month}`;
+    }
+
+    async function loadExpenses() {
+        try {
+            allExpenses = [];
+            let url = "{% url 'expense-list' %}";
+            let hasMore = true;
+
+            while (hasMore) {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error("Unable to load expenses.");
+                }
+                const data = await response.json();
+                allExpenses = allExpenses.concat(data.results);
+
+                if (data.next) {
+                    url = data.next;
+                } else {
+                    hasMore = false;
+                }
+            }
+
+            filterAndDisplayExpenses();
+        } catch (error) {
+            console.error(error);
+            expensesList.innerHTML = '<p class="error-message">Unable to load expenses.</p>';
+        }
+    }
+
+    function filterAndDisplayExpenses() {
+        const selectedMonth = monthPicker.value;
+        if (!selectedMonth) {
+            expensesList.innerHTML = '<p class="empty-message">Please select a month.</p>';
+            return;
+        }
+
+        const monthStart = getMonthStart(selectedMonth);
+        const monthEnd = getMonthEnd(selectedMonth);
+
+        const filteredExpenses = allExpenses.filter(expense => {
+            if (!expense.repeats) {
+                const expenseDate = new Date(expense.date);
+                return expenseDate >= monthStart && expenseDate <= monthEnd;
+            } else {
+                const expenseDate = new Date(expense.date);
+                return expenseDate <= monthEnd;
+            }
+        });
+
+        displayExpenses(filteredExpenses, selectedMonth);
+    }
+
+    function displayExpenses(expenses, selectedMonth) {
+        expensesList.innerHTML = "";
+
+        if (expenses.length === 0) {
+            expensesList.innerHTML = "<p class='empty-message'>No expenses for this month.</p>";
+            return;
+        }
+
+        const table = document.createElement("table");
+        table.className = "expenses-table";
+
+        const headerRow = document.createElement("thead");
+        const headerContent = document.createElement("tr");
+        headerContent.innerHTML = `
+            <th>Source</th>
+            <th>Category</th>
+            <th>Amount</th>
+            <th>Currency</th>
+            <th>Type</th>
+        `;
+        headerRow.appendChild(headerContent);
+        table.appendChild(headerRow);
+
+        const tbody = document.createElement("tbody");
+        expenses.forEach(expense => {
+            const row = document.createElement("tr");
+            row.className = "expense-row";
+            row.style.cursor = "pointer";
+
+            const typeDisplay = expense.repeats ? 'Repeating' : 'One-time';
+
+            row.innerHTML = `
+                <td>${expense.source}</td>
+                <td>${expense.category}</td>
+                <td>${parseFloat(expense.amount).toFixed(2)}</td>
+                <td>${expense.currency}</td>
+                <td>${typeDisplay}</td>
+            `;
+
+            row.onclick = () => {
+                window.location.href = `/expense/${expense.id}/?return_to=monthly-expenses`;
+            };
+
+            tbody.appendChild(row);
+        });
+        table.appendChild(tbody);
+
+        expensesList.appendChild(table);
+
+        const summarySection = document.createElement("div");
+        summarySection.className = "summary-section";
+
+        const currencySums = {};
+        expenses.forEach(expense => {
+            if (!currencySums[expense.currency]) {
+                currencySums[expense.currency] = 0;
+            }
+            currencySums[expense.currency] += parseFloat(expense.amount);
+        });
+
+        const currencies = Object.keys(currencySums).sort();
+
+        if (currencies.length === 1) {
+            const currency = currencies[0];
+            const total = currencySums[currency].toFixed(2);
+            const summaryRow = document.createElement("div");
+            summaryRow.className = "summary-row";
+            summaryRow.innerHTML = `
+                <span class="summary-label">Total:</span>
+                <span class="summary-amount">${currency} ${total}</span>
+            `;
+            summarySection.appendChild(summaryRow);
+        } else {
+            const totalRow = document.createElement("div");
+            totalRow.className = "summary-row";
+            totalRow.innerHTML = `
+                <span class="summary-label">Total by Currency:</span>
+            `;
+            summarySection.appendChild(totalRow);
+
+            currencies.forEach(currency => {
+                const total = currencySums[currency].toFixed(2);
+                const currencyRow = document.createElement("div");
+                currencyRow.className = "summary-row";
+                currencyRow.style.paddingLeft = "20px";
+                currencyRow.innerHTML = `
+                    <span class="summary-label">${currency}:</span>
+                    <span class="summary-amount">${total}</span>
+                `;
+                summarySection.appendChild(currencyRow);
+            });
+        }
+
+        expensesList.appendChild(summarySection);
+    }
+
+    function showError(message) {
+        errorMessage.textContent = message;
+        errorMessage.style.display = "block";
+    }
+
+    monthPicker.addEventListener("change", filterAndDisplayExpenses);
+
+    initializeMonthPicker();
+    loadExpenses();
+</script>
+{% endblock %}

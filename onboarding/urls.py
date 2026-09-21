@@ -16,4 +16,5 @@ urlpatterns = [
     path('expense/<int:pk>/', views.expense_details_page, name='expense-details-page'),
     path('incomes/', views.incomes_page, name='incomes-page'),
     path('income/<int:pk>/', views.income_details_page, name='income-details-page'),
+    path('monthly-expenses/', views.monthly_expenses_page, name='monthly-expenses-page'),
 ]

@@ -113,7 +113,7 @@
 {% endblock %}
 {% block content %}
 <div class="expense-details-container">
-    <a href="{% url 'expenses-page' %}" class="back-link">← Back to Expenses</a>
+    <a id="back-link" href="{% url 'expenses-page' %}" class="back-link">← Back</a>
     <h1>Expense Details</h1>
 
     <div class="expense-details-form">
@@ -175,8 +175,25 @@
     const errorMessage = document.getElementById("error-message");
     const successMessage = document.getElementById("success-message");
     const deleteButton = document.getElementById("delete-button");
+    const backLink = document.getElementById("back-link");
     const expenseId = "{{ expense_id }}";
     let allCategories = [];
+
+    function getReturnUrl() {
+        const params = new URLSearchParams(window.location.search);
+        const returnTo = params.get("return_to");
+
+        const urlMap = {
+            "monthly-expenses": "{% url 'monthly-expenses-page' %}",
+            "expenses": "{% url 'expenses-page' %}"
+        };
+
+        return urlMap[returnTo] || "{% url 'expenses-page' %}";
+    }
+
+    function updateBackLink() {
+        backLink.href = getReturnUrl();
+    }
 
     function getCookie(name) {
         let cookieValue = null;
@@ -297,7 +314,7 @@
 
             showSuccess("Expense saved successfully! Redirecting...");
             setTimeout(() => {
-                window.location.href = "{% url 'expenses-page' %}";
+                window.location.href = getReturnUrl();
             }, 1500);
         } catch (error) {
             console.error(error);
@@ -322,7 +339,7 @@
 
                 showSuccess("Expense deleted successfully! Redirecting...");
                 setTimeout(() => {
-                    window.location.href = "{% url 'expenses-page' %}";
+                    window.location.href = getReturnUrl();
                 }, 1500);
             } catch (error) {
                 console.error(error);
@@ -331,6 +348,7 @@
         }
     });
 
+    updateBackLink();
     loadCategories();
     loadExpenseDetails();
 </script>

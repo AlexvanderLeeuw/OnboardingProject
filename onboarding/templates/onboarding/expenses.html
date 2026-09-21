@@ -480,7 +480,7 @@
             `;
 
             row.onclick = () => {
-                window.location.href = `/expense/${expense.id}/`;
+                window.location.href = `/expense/${expense.id}/?return_to=expenses`;
             };
 
             tbody.appendChild(row);
