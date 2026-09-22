@@ -9,7 +9,7 @@
     The HTTP method used for this request is not supported on this resource. This usually happens when trying to perform an action that isn't allowed for this page or API endpoint.
 </div>
 <div class="error-actions">
-    <a href="/categories/" class="btn btn-primary">Go to Categories</a>
+    <a href="{% url 'categories-page' %}" class="btn btn-primary">Go to Categories</a>
     <a href="javascript:history.back()" class="btn btn-secondary">Go Back</a>
 </div>
 {% endblock %}

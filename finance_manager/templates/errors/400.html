@@ -9,7 +9,7 @@
     The request you sent is invalid or malformed. This usually happens when form data is incomplete or incorrectly formatted. Please check your input and try again.
 </div>
 <div class="error-actions">
-    <a href="/categories/" class="btn btn-primary">Go to Categories</a>
-    <a href="javascript:history.back()" class="btn btn-secondary">Go Back</a>
+    <a href="{% url 'categories-page' %}" class="btn btn-primary">Go to Categories</a>
+    <button class="btn btn-secondary" onclick="history.back()">Go Back</button>
 </div>
 {% endblock %}

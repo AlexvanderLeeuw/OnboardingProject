@@ -9,7 +9,7 @@
     Something went wrong on our end. We've logged this error and our team has been notified. Please try again in a few moments.
 </div>
 <div class="error-actions">
-    <a href="/categories/" class="btn btn-primary">Go to Categories</a>
+    <a href="{% url 'categories-page' %}" class="btn btn-primary">Go to Categories</a>
     <a href="javascript:location.reload()" class="btn btn-secondary">Try Again</a>
 </div>
 {% endblock %}
