@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
-from onboarding.choice_lists import CURRENCY_CHOICES
+from finance_manager.choice_lists import CURRENCY_CHOICES
 
 class Category(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE)

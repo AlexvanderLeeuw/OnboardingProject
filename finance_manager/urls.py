@@ -1,5 +1,5 @@
 from django.urls import path
-from onboarding import views
+from finance_manager import views
 
 urlpatterns = [
     #Auth

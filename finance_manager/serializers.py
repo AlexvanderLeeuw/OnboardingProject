@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from onboarding.models import Category, Income, Expense
+from finance_manager.models import Category, Income, Expense
 
 class CategorySerializer(serializers.ModelSerializer):
     #Check if the user doesn't already have a category with the same name
