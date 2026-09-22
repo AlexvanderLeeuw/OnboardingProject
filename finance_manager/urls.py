@@ -6,10 +6,8 @@ urlpatterns = [
     path('login/', views.login_page, name='login-page'),
     path('register/', views.register_page, name='register-page'),
     path('logout/', views.logout_page, name='logout-page'),
-    path('token-error/', views.token_error_page, name='token-error-page'),
 
     #API
-    path('api/auth/token/', views.GetAuthToken.as_view(), name='get-auth-token'),
     path('api/categories/', views.CategoryList.as_view(), name='category-list'),
     path('api/categories/<int:pk>', views.CategoryDetails.as_view(), name='category-detail'),
     path('api/expenses/', views.ExpenseList.as_view(), name='expense-list'),

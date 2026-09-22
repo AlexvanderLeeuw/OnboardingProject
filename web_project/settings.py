@@ -39,7 +39,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'finance_manager',
     'rest_framework',
-    'rest_framework.authtoken'
 ]
 
 MIDDLEWARE = [
@@ -132,6 +131,12 @@ MAILERS = {
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 5,
-    'DEFAULT_AUTHENTICATION_CLASSES': ['rest_framework.authentication.TokenAuthentication'],
+    'DEFAULT_AUTHENTICATION_CLASSES': ['rest_framework.authentication.SessionAuthentication'],
     'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.IsAuthenticated'],
 }
+
+# The session cookie is HttpOnly by default; keep it explicit since it's what
+# keeps the session id out of reach of JavaScript/XSS. The CSRF cookie must stay
+# readable by JS so the templates can send it back as the X-CSRFToken header.
+SESSION_COOKIE_HTTPONLY = True
+CSRF_COOKIE_HTTPONLY = False

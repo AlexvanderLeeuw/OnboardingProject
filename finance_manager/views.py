@@ -8,7 +8,6 @@ from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
 from django.db import IntegrityError
-from rest_framework.authtoken.models import Token
 import re
 
 class CategoryList(ListCreateAPIView):
@@ -46,21 +45,6 @@ class IncomeDetails(RetrieveUpdateDestroyAPIView):
     serializer_class = IncomeSerializer
     def get_queryset(self):
         return Income.objects.filter(owner=self.request.user)
-
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.authentication import SessionAuthentication, TokenAuthentication
-
-class GetAuthToken(APIView):
-    authentication_classes = [SessionAuthentication, TokenAuthentication]
-    permission_classes = [IsAuthenticated]
-    def get(self, request):
-        try:
-            token = Token.objects.get(user=request.user)
-            return Response({'token': token.key})
-        except Token.DoesNotExist:
-            return Response({'token': None}, status=400)
 
 def protected_page(view_func):
     def wrapper(request, *args, **kwargs):
@@ -168,9 +152,6 @@ def register_page(request):
 def logout_page(request):
     logout(request)
     return redirect('login-page')
-
-def token_error_page(request):
-    return render(request, 'finance_manager/token_error.html')
 
 def error_400(request, exception):
     return render(request, 'errors/400.html', status=400)
