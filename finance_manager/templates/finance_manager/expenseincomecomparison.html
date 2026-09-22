@@ -1,4 +1,5 @@
 {% extends "finance_manager/base.html" %}
+{% load static %}
 {% block title %}Expense & Income Comparison - Finance Manager{% endblock %}
 {% block extra_css %}
 <style>
@@ -317,6 +318,7 @@
     </div>
 </div>
 
+<script src="{% static 'finance_manager/commons/utils.js' %}"></script>
 <script>
     const contentContainer = document.getElementById("content-container");
     const summaryContainer = document.getElementById("summary-container");
@@ -328,21 +330,6 @@
     let showMonthlyTotals = true;
     const expenseDetailsUrlTemplate = "{% url 'expense-details-page' pk=0 %}";
     const incomeDetailsUrlTemplate = "{% url 'income-details-page' pk=0 %}";
-
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== "") {
-            const cookies = document.cookie.split(";");
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + "=")) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
 
     function initializeDatePicker() {
         const today = new Date();

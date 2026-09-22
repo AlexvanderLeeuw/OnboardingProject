@@ -1,4 +1,5 @@
 {% extends "finance_manager/base.html" %}
+{% load static %}
 {% block title %}Expenses - Finance Manager{% endblock %}
 {% block extra_css %}
 <style>
@@ -299,6 +300,7 @@
     </div>
 </div>
 
+<script src="{% static 'finance_manager/commons/utils.js' %}"></script>
 <script>
     const expensesList = document.getElementById("expenses-list");
     const errorMessage = document.getElementById("error-message");
@@ -316,21 +318,6 @@
     let allCategories = [];
     const itemsPerPage = 5;
     const expenseDetailsUrlTemplate = "{% url 'expense-details-page' pk=0 %}";
-
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== "") {
-            const cookies = document.cookie.split(";");
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + "=")) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
 
     async function loadCategories() {
         try {
