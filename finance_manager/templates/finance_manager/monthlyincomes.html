@@ -165,6 +165,7 @@
     const errorMessage = document.getElementById("error-message");
     const monthPicker = document.getElementById("month-picker");
     let allIncomes = [];
+    const incomeDetailsUrlTemplate = "{% url 'income-details-page' pk=0 %}";
 
     function getCookie(name) {
         let cookieValue = null;
@@ -305,7 +306,7 @@
             `;
 
             row.onclick = () => {
-                window.location.href = `/income/${income.id}/?return_to=monthly-incomes`;
+                window.location.href = `${incomeDetailsUrlTemplate.replace('/0/', `/${income.id}/`)}?return_to=monthly-incomes`;
             };
 
             tbody.appendChild(row);
@@ -371,7 +372,9 @@
 
     monthPicker.addEventListener("change", filterAndDisplayIncomes);
 
-    initializeMonthPicker();
-    loadIncomes();
+    (async () => {
+        initializeMonthPicker();
+        await loadIncomes();
+    })();
 </script>
 {% endblock %}

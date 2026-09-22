@@ -326,6 +326,8 @@
     let allExpenses = [];
     let allIncomes = [];
     let showMonthlyTotals = true;
+    const expenseDetailsUrlTemplate = "{% url 'expense-details-page' pk=0 %}";
+    const incomeDetailsUrlTemplate = "{% url 'income-details-page' pk=0 %}";
 
     function getCookie(name) {
         let cookieValue = null;
@@ -572,9 +574,9 @@
             row.appendChild(amountDiv);
 
             row.onclick = () => {
-                const entryType = isIncome ? "income" : "expense";
                 const returnTo = "expense-income-comparison";
-                window.location.href = `/${entryType}/${entry.id}/?return_to=${returnTo}`;
+                const template = isIncome ? incomeDetailsUrlTemplate : expenseDetailsUrlTemplate;
+                window.location.href = `${template.replace('/0/', `/${entry.id}/`)}?return_to=${returnTo}`;
             };
 
             currencyGroup.appendChild(row);

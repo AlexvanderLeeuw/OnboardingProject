@@ -315,6 +315,7 @@
     let allIncomes = [];
     let allCategories = [];
     const itemsPerPage = 5;
+    const incomeDetailsUrlTemplate = "{% url 'income-details-page' pk=0 %}";
 
     function getCookie(name) {
         let cookieValue = null;
@@ -502,7 +503,7 @@
             `;
 
             row.onclick = () => {
-                window.location.href = `/income/${income.id}/`;
+                window.location.href = incomeDetailsUrlTemplate.replace('/0/', `/${income.id}/`);
             };
 
             tbody.appendChild(row);
@@ -638,7 +639,9 @@
         }
     });
 
-    loadCategories();
-    loadIncomes();
+    (async () => {
+        await loadCategories();
+        await loadIncomes();
+    })();
 </script>
 {% endblock %}

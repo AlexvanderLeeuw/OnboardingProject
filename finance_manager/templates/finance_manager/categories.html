@@ -157,13 +157,15 @@
 
                 categoryName.value = "";
                 errorMessage.textContent = "";
-                loadCategories();
+                await loadCategories();
             } catch (error) {
                 console.error(error);
                 errorMessage.textContent = error.message || "Unable to create category.";
             }
         });
 
-        loadCategories();
+        (async () => {
+            await loadCategories();
+        })();
 </script>
 {% endblock %}

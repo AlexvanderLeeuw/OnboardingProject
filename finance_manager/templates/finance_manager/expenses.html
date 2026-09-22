@@ -315,6 +315,7 @@
     let allExpenses = [];
     let allCategories = [];
     const itemsPerPage = 5;
+    const expenseDetailsUrlTemplate = "{% url 'expense-details-page' pk=0 %}";
 
     function getCookie(name) {
         let cookieValue = null;
@@ -502,7 +503,7 @@
             `;
 
             row.onclick = () => {
-                window.location.href = `/expense/${expense.id}/?return_to=expenses`;
+                window.location.href = `${expenseDetailsUrlTemplate.replace('/0/', `/${expense.id}/`)}?return_to=expenses`;
             };
 
             tbody.appendChild(row);
@@ -638,7 +639,9 @@
         }
     });
 
-    loadCategories();
-    loadExpenses();
+    (async () => {
+        await loadCategories();
+        await loadExpenses();
+    })();
 </script>
 {% endblock %}
