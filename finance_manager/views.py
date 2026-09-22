@@ -84,35 +84,35 @@ def validate_password(password):
 #Template views start here
 @protected_page
 def categories_page(request):
-    return render(request, "onboarding/categories.html")
+    return render(request, "finance_manager/categories.html")
 
 @protected_page
 def expenses_page(request):
-    return render(request, "onboarding/expenses.html", {"currency_choices": CURRENCY_CHOICES})
+    return render(request, "finance_manager/expenses.html", {"currency_choices": CURRENCY_CHOICES})
 
 @protected_page
 def expense_details_page(request, pk):
-    return render(request, "onboarding/expensedetails.html", {"currency_choices": CURRENCY_CHOICES, "expense_id": pk})
+    return render(request, "finance_manager/expensedetails.html", {"currency_choices": CURRENCY_CHOICES, "expense_id": pk})
 
 @protected_page
 def incomes_page(request):
-    return render(request, "onboarding/incomes.html", {"currency_choices": CURRENCY_CHOICES})
+    return render(request, "finance_manager/incomes.html", {"currency_choices": CURRENCY_CHOICES})
 
 @protected_page
 def income_details_page(request, pk):
-    return render(request, "onboarding/incomedetails.html", {"currency_choices": CURRENCY_CHOICES, "income_id": pk})
+    return render(request, "finance_manager/incomedetails.html", {"currency_choices": CURRENCY_CHOICES, "income_id": pk})
 
 @protected_page
 def monthly_expenses_page(request):
-    return render(request, "onboarding/monthlyexpenses.html", {"currency_choices": CURRENCY_CHOICES})
+    return render(request, "finance_manager/monthlyexpenses.html", {"currency_choices": CURRENCY_CHOICES})
 
 @protected_page
 def monthly_incomes_page(request):
-    return render(request, "onboarding/monthlyincomes.html", {"currency_choices": CURRENCY_CHOICES})
+    return render(request, "finance_manager/monthlyincomes.html", {"currency_choices": CURRENCY_CHOICES})
 
 @protected_page
 def expense_income_comparison_page(request):
-    return render(request, "onboarding/expenseincomecomparison.html", {"currency_choices": CURRENCY_CHOICES})
+    return render(request, "finance_manager/expenseincomecomparison.html", {"currency_choices": CURRENCY_CHOICES})
 
 @require_http_methods(["GET", "POST"])
 def login_page(request):
@@ -128,9 +128,9 @@ def login_page(request):
             login(request, user)
             return redirect('categories-page')
         else:
-            return render(request, 'onboarding/login.html', {'error': 'Invalid username or password'})
+            return render(request, 'finance_manager/login.html', {'error': 'Invalid username or password'})
 
-    return render(request, 'onboarding/login.html')
+    return render(request, 'finance_manager/login.html')
 
 @require_http_methods(["GET", "POST"])
 def register_page(request):
@@ -145,32 +145,32 @@ def register_page(request):
 
         password_errors = validate_password(password)
         if password_errors:
-            return render(request, 'onboarding/register.html', {'error': password_errors[0]})
+            return render(request, 'finance_manager/register.html', {'error': password_errors[0]})
 
         if password != password_confirm:
-            return render(request, 'onboarding/register.html', {'error': 'Passwords do not match'})
+            return render(request, 'finance_manager/register.html', {'error': 'Passwords do not match'})
 
         if User.objects.filter(username=username).exists():
-            return render(request, 'onboarding/register.html', {'error': 'Username already exists'})
+            return render(request, 'finance_manager/register.html', {'error': 'Username already exists'})
 
         if User.objects.filter(email=email).exists():
-            return render(request, 'onboarding/register.html', {'error': 'Email already exists'})
+            return render(request, 'finance_manager/register.html', {'error': 'Email already exists'})
 
         try:
             user = User.objects.create_user(username=username, email=email, password=password)
             login(request, user)
             return redirect('categories-page')
         except IntegrityError:
-            return render(request, 'onboarding/register.html', {'error': 'Error creating account'})
+            return render(request, 'finance_manager/register.html', {'error': 'Error creating account'})
 
-    return render(request, 'onboarding/register.html')
+    return render(request, 'finance_manager/register.html')
 
 def logout_page(request):
     logout(request)
     return redirect('login-page')
 
 def token_error_page(request):
-    return render(request, 'onboarding/token_error.html')
+    return render(request, 'finance_manager/token_error.html')
 
 def error_400(request, exception):
     return render(request, 'errors/400.html', status=400)
