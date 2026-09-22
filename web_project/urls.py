@@ -16,15 +16,15 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from finance_manager import views
+from finance_manager.views import error_400, error_403, error_404, error_405, error_500
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('finance_manager.urls')),
 ]
 
-handler400 = views.error_400
-handler403 = views.error_403
-handler404 = views.error_404
-handler405 = views.error_405
-handler500 = views.error_500
+handler400 = error_400
+handler403 = error_403
+handler404 = error_404
+handler405 = error_405
+handler500 = error_500
