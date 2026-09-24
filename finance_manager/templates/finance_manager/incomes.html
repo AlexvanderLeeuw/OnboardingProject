@@ -317,7 +317,7 @@
     let allIncomes = [];
     let allCategories = [];
     const itemsPerPage = 5;
-    const incomeDetailsUrlTemplate = "{% url 'income-details-page' pk=0 %}";
+    const incomeDetailsUrlTemplate = "{% url 'income-details-page' pk='{id}' %}";
 
     async function loadCategories() {
         try {
@@ -490,7 +490,7 @@
             `;
 
             row.onclick = () => {
-                window.location.href = incomeDetailsUrlTemplate.replace('/0/', `/${income.id}/`);
+                window.location.href = incomeDetailsUrlTemplate.replace('{id}', income.id);
             };
 
             tbody.appendChild(row);
