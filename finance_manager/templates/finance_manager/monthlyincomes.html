@@ -1,0 +1,343 @@
+{% extends "finance_manager/base.html" %}
+{% load static %}
+{% block title %}Monthly Incomes - Finance Manager{% endblock %}
+{% block extra_css %}
+<style>
+    .monthly-incomes-container {
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+    .monthly-incomes-container h1 {
+        margin-bottom: 24px;
+    }
+    .filters-section {
+        background-color: white;
+        padding: 20px;
+        border-radius: 6px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        margin-bottom: 24px;
+    }
+    .filter-row {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        align-items: flex-end;
+    }
+    .filter-group {
+        flex: 1;
+        min-width: 200px;
+    }
+    .filter-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: bold;
+        font-size: 14px;
+    }
+    .filter-group input {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 15px;
+    }
+    .overview-section {
+        background-color: white;
+        border-radius: 6px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        margin-bottom: 40px;
+        overflow-x: auto;
+    }
+    .incomes-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .incomes-table th {
+        background-color: #f9f9f9;
+        padding: 12px 16px;
+        text-align: left;
+        font-weight: bold;
+        border-bottom: 2px solid #eee;
+        font-size: 14px;
+    }
+    .incomes-table td {
+        padding: 12px 16px;
+        border-bottom: 1px solid #eee;
+    }
+    .income-row {
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+    .income-row:hover {
+        background-color: #f9f9f9;
+    }
+    .repeating-badge {
+        display: inline-block;
+        background-color: #e5e7eb;
+        color: #374151;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 13px;
+        font-weight: 500;
+    }
+    .summary-section {
+        background-color: #f9f9f9;
+        padding: 16px;
+        border-top: 2px solid #eee;
+    }
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+    }
+    .summary-row:last-child {
+        margin-bottom: 0;
+    }
+    .summary-label {
+        font-weight: bold;
+        color: #333;
+    }
+    .summary-amount {
+        font-weight: bold;
+        color: #9b46e5;
+        font-size: 16px;
+    }
+    .error-message {
+        color: #dc2626;
+        margin-bottom: 12px;
+        padding: 12px;
+        background-color: #fee2e2;
+        border-radius: 4px;
+    }
+    .loading-message {
+        color: #678;
+        text-align: center;
+        padding: 40px 16px;
+    }
+    .empty-message {
+        color: #678;
+        text-align: center;
+        padding: 40px 16px;
+    }
+    @media (max-width: 768px) {
+        .filter-row {
+            flex-direction: column;
+        }
+        .filter-group {
+            min-width: 100%;
+        }
+        .incomes-table {
+            font-size: 14px;
+        }
+        .incomes-table th,
+        .incomes-table td {
+            padding: 8px;
+        }
+        .summary-row {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 4px;
+        }
+    }
+</style>
+{% endblock %}
+{% block content %}
+<div class="monthly-incomes-container">
+    <h1>Monthly Incomes</h1>
+    <div class="filters-section">
+        <div id="error-message" class="error-message" style="display: none;"></div>
+        <div class="filter-row">
+            <div class="filter-group">
+                <label for="month-picker">Select Month</label>
+                <input type="month" id="month-picker">
+            </div>
+        </div>
+    </div>
+
+    <div class="overview-section">
+        <div id="incomes-list">
+            <p class="loading-message">Loading incomes...</p>
+        </div>
+    </div>
+</div>
+
+<script src="{% static 'finance_manager/commons/utils.js' %}"></script>
+<script>
+    const incomesList = document.getElementById("incomes-list");
+    const errorMessage = document.getElementById("error-message");
+    const monthPicker = document.getElementById("month-picker");
+    let allIncomes = [];
+    const incomeDetailsUrlTemplate = "{% url 'income-details-page' pk=0 %}";
+
+    async function loadIncomes() {
+        try {
+            allIncomes = [];
+            let url = "{% url 'income-list' %}";
+            let hasMore = true;
+
+            while (hasMore) {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error("Unable to load incomes.");
+                }
+                const data = await response.json();
+                allIncomes = allIncomes.concat(data.results);
+
+                if (data.next) {
+                    url = data.next;
+                } else {
+                    hasMore = false;
+                }
+            }
+
+            filterAndDisplayIncomes();
+        } catch (error) {
+            console.error(error);
+            incomesList.innerHTML = '<p class="error-message">Unable to load incomes.</p>';
+        }
+    }
+
+    function filterAndDisplayIncomes() {
+        const selectedMonth = monthPicker.value;
+        if (!selectedMonth) {
+            incomesList.innerHTML = '<p class="empty-message">Please select a month.</p>';
+            return;
+        }
+
+        const monthStart = getMonthStart(selectedMonth);
+        const monthEnd = getMonthEnd(selectedMonth);
+
+        const filteredIncomes = allIncomes.filter(income => {
+            if (!income.repeats) {
+                const incomeDate = new Date(income.date);
+                return incomeDate >= monthStart && incomeDate <= monthEnd;
+            } else {
+                const incomeDate = new Date(income.date);
+                return incomeDate <= monthEnd;
+            }
+        });
+
+        displayIncomes(filteredIncomes, selectedMonth, monthStart);
+    }
+
+    function isRepeatingExpired(income, monthStart) {
+        return income.repeats && income.expiration_date && new Date(income.expiration_date) < monthStart;
+    }
+
+    function displayIncomes(incomes, selectedMonth, monthStart) {
+        incomesList.innerHTML = "";
+
+        if (incomes.length === 0) {
+            incomesList.innerHTML = "<p class='empty-message'>No incomes for this month.</p>";
+            return;
+        }
+
+        const table = document.createElement("table");
+        table.className = "incomes-table";
+
+        const headerRow = document.createElement("thead");
+        const headerContent = document.createElement("tr");
+        headerContent.innerHTML = `
+            <th>Source</th>
+            <th>Category</th>
+            <th>Amount</th>
+            <th>Currency</th>
+            <th>Type</th>
+        `;
+        headerRow.appendChild(headerContent);
+        table.appendChild(headerRow);
+
+        const tbody = document.createElement("tbody");
+        incomes.forEach(income => {
+            const row = document.createElement("tr");
+            row.className = "income-row";
+            row.style.cursor = "pointer";
+
+            let typeDisplay;
+            if (!income.repeats) {
+                typeDisplay = 'One-time';
+            } else {
+                typeDisplay = isRepeatingExpired(income, monthStart) ? 'Repeating(expired)' : 'Repeating';
+            }
+
+            row.innerHTML = `
+                <td>${income.source}</td>
+                <td>${income.category}</td>
+                <td>${parseFloat(income.amount).toFixed(2)}</td>
+                <td>${income.currency}</td>
+                <td>${typeDisplay}</td>
+            `;
+
+            row.onclick = () => {
+                window.location.href = `${incomeDetailsUrlTemplate.replace('/0/', `/${income.id}/`)}?return_to=monthly-incomes`;
+            };
+
+            tbody.appendChild(row);
+        });
+        table.appendChild(tbody);
+
+        incomesList.appendChild(table);
+
+        const summarySection = document.createElement("div");
+        summarySection.className = "summary-section";
+
+        const currencySums = {};
+        incomes.forEach(income => {
+            if (isRepeatingExpired(income, monthStart)) {
+                return;
+            }
+            if (!currencySums[income.currency]) {
+                currencySums[income.currency] = 0;
+            }
+            currencySums[income.currency] += parseFloat(income.amount);
+        });
+
+        const currencies = Object.keys(currencySums).sort();
+
+        if (currencies.length === 1) {
+            const currency = currencies[0];
+            const total = currencySums[currency].toFixed(2);
+            const summaryRow = document.createElement("div");
+            summaryRow.className = "summary-row";
+            summaryRow.innerHTML = `
+                <span class="summary-label">Total:</span>
+                <span class="summary-amount">${currency} ${total}</span>
+            `;
+            summarySection.appendChild(summaryRow);
+        } else {
+            const totalRow = document.createElement("div");
+            totalRow.className = "summary-row";
+            totalRow.innerHTML = `
+                <span class="summary-label">Total by Currency:</span>
+            `;
+            summarySection.appendChild(totalRow);
+
+            currencies.forEach(currency => {
+                const total = currencySums[currency].toFixed(2);
+                const currencyRow = document.createElement("div");
+                currencyRow.className = "summary-row";
+                currencyRow.style.paddingLeft = "20px";
+                currencyRow.innerHTML = `
+                    <span class="summary-label">${currency}:</span>
+                    <span class="summary-amount">${total}</span>
+                `;
+                summarySection.appendChild(currencyRow);
+            });
+        }
+
+        incomesList.appendChild(summarySection);
+    }
+
+    function showError(message) {
+        errorMessage.textContent = message;
+        errorMessage.style.display = "block";
+    }
+
+    monthPicker.addEventListener("change", filterAndDisplayIncomes);
+
+    (async () => {
+        initializeMonthPicker(monthPicker);
+        await loadIncomes();
+    })();
+</script>
+{% endblock %}

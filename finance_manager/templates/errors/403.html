@@ -1,0 +1,15 @@
+﻿{% extends "errors/base_error.html" %}
+
+{% block error_title %}403 - Access Denied{% endblock %}
+
+{% block error_content %}
+<div class="error-code">403</div>
+<div class="error-title">Access Denied</div>
+<div class="error-message">
+    You don't have permission to access this resource. If you think this is a mistake, please contact support or go back to the main page.
+</div>
+<div class="error-actions">
+    <a href="{% url 'categories-page' %}" class="btn btn-primary">Go to Categories</a>
+    <a href="javascript:history.back()" class="btn btn-secondary">Go Back</a>
+</div>
+{% endblock %}
